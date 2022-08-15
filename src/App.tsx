@@ -1,4 +1,3 @@
-import { Stage, Text, useApp } from "@inlet/react-pixi";
 import React, { useState } from "react";
 import { Component } from "./render/components/Component";
 import {} from "jotai";
