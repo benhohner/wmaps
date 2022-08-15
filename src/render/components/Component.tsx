@@ -1,7 +1,3 @@
-import React from "react";
-
-//import { Graphics } from "react-pixi-fiber";
-import { Graphics } from "@inlet/react-pixi";
 import * as PIXI from "pixi.js";
 
 import KeyPressure from "../utilities/KeyPressure";
@@ -35,44 +31,39 @@ const makeLine = (lineTargetB: any) => {
   return graphics;
 };
 
-interface ComponentProps {
-  x: number;
-  y: number;
-}
+type ExtendedGraphics = PIXI.Graphics & { id?: number };
 
-export const Component = ({ x, y, ...props }: ComponentProps): JSX.Element => {
-  const draw = React.useCallback(
-    (g) => {
-      console.log(g);
-      g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
-      g.beginFill(0x000000, 1);
-      g.drawCircle(0, 0, 7);
-      g.endFill();
-      g.beginFill(0xffffff, 1);
-      g.drawCircle(0, 0, 6);
-      g.endFill();
-      g.position = new PIXI.Point(x, y);
-      g.id = ObjectIDCounter.getID();
+export const Component = (x: number, y: number) => {
+  let g: ExtendedGraphics = new PIXI.Graphics();
 
-      setDraggable(g);
+  console.log(g);
 
-      g.on("pointerdown", (e) => {
-        if (KeyPressure.keys[17]) {
-          // control
-          if (LineTargetA.target && LineTargetA.target.id !== e.target.id) {
-            AppSingleton.app.stage.addChild(makeLine(e.target)); // either need to do collision detection or need an event handler on the objects. If I need to do on objects, how do I make a shared context
-            LineTargetA.target = undefined;
-          } else {
-            console.log(KeyPressure.keys);
-            LineTargetA.target = e.target;
-          }
-        } else {
-          LineTargetA.target = undefined;
-        }
-      });
-    },
-    [props]
-  );
+  g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
+  g.beginFill(0x000000, 1);
+  g.drawCircle(0, 0, 7);
+  g.endFill();
+  g.beginFill(0xffffff, 1);
+  g.drawCircle(0, 0, 6);
+  g.endFill();
+  g.position = new PIXI.Point(x, y);
+  g.id = ObjectIDCounter.getID();
 
-  return <Graphics draw={draw} {...props} />;
+  setDraggable(g);
+
+  g.on("pointerdown", (e) => {
+    if (KeyPressure.keys[17]) {
+      // control
+      if (LineTargetA.target && LineTargetA.target.id !== e.target.id) {
+        AppSingleton.app.stage.addChild(makeLine(e.target)); // either need to do collision detection or need an event handler on the objects. If I need to do on objects, how do I make a shared context
+        LineTargetA.target = undefined;
+      } else {
+        console.log(KeyPressure.keys);
+        LineTargetA.target = e.target;
+      }
+    } else {
+      LineTargetA.target = undefined;
+    }
+  });
+
+  return g;
 };

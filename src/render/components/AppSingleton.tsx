@@ -16,7 +16,8 @@ class AppSingleton {
     this.app = new Application({
       width: 500,
       height: 350,
-      backgroundColor: 0xf0f0f0
+      backgroundColor: 0xf0f0f0,
+      antialias: true,
     });
     this.app.stage.sortableChildren = true; // make zIndex work
   }
