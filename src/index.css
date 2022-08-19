@@ -1,0 +1,16 @@
+body {
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+#editor {
+  flex-grow: 1;
+  max-height: 50vh;
+}
+
+#app {
+  flex-grow: 1;
+  line-height: 0;
+}

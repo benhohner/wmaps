@@ -1,42 +1,57 @@
 import * as PIXI from "pixi.js";
 
 import KeyPressure from "../utilities/KeyPressure";
-import ObjectIDCounter from "../utilities/ObjectIDCounter";
+import ObjectIDCounter from "../../state/utilities/ObjectIDCounter";
 import { setDraggable } from "../utilities/Draggable";
 
 import LineTargetA from "../utilities/LineTargetA";
 
 import AppSingleton from "./AppSingleton";
 
-const makeLine = (lineTargetB: any) => {
-  console.log("makeline called");
-  console.log(LineTargetA.target, lineTargetB);
+export type ExtendedGraphics = PIXI.Graphics &
+  PIXI.DisplayObject & {
+    id?: number;
+    ticker?: PIXI.Ticker;
+  };
 
-  if (LineTargetA.target.id === lineTargetB.id) {
-    console.log("Error: Unable to create a line to a line");
-    LineTargetA.target = undefined;
-    return;
-  }
-
-  const graphics: PIXI.Graphics & { id?: number } = new PIXI.Graphics();
+export const Line = (
+  componentA: ExtendedGraphics,
+  componentB: ExtendedGraphics
+): ExtendedGraphics => {
+  const graphics: ExtendedGraphics = new PIXI.Graphics();
   graphics.lineStyle(1, 0x000000, 1, 0.5, false);
-  graphics.moveTo(LineTargetA.target.x, LineTargetA.target.y);
-  graphics.lineTo(lineTargetB.x, lineTargetB.y);
+  graphics.moveTo(componentA.x, componentA.y);
+  graphics.lineTo(componentB.x, componentB.y);
   graphics.endFill();
 
   graphics.zIndex = -1;
 
   graphics.id = ObjectIDCounter.getID();
 
+  // STATE: kind of, at least updates here
+  graphics.ticker = AppSingleton.app.ticker.add((delta: number) => {
+    graphics.clear();
+    graphics.lineStyle(1, 0x000000, 1, 0.5, false);
+    graphics.moveTo(componentA.x, componentA.y);
+    graphics.lineTo(componentB.x, componentB.y);
+    graphics.endFill();
+  });
+
   return graphics;
 };
 
-type ExtendedGraphics = PIXI.Graphics & { id?: number };
+const makeLine = (lineTargetB: any) => {
+  // Don't allow connecting component to itself
+  if (LineTargetA.target.id === lineTargetB.id) {
+    LineTargetA.target = undefined;
+    return;
+  }
+
+  return Line(LineTargetA.target, lineTargetB);
+};
 
 export const Component = (x: number, y: number) => {
   let g: ExtendedGraphics = new PIXI.Graphics();
-
-  console.log(g);
 
   g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
   g.beginFill(0x000000, 1);
@@ -50,14 +65,36 @@ export const Component = (x: number, y: number) => {
 
   setDraggable(g);
 
+  KeyPressure.addKeydownListener(17, () => {
+    g.clear();
+    g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
+    g.beginFill(0x0f30a0, 1);
+    g.drawCircle(0, 0, 8);
+    g.endFill();
+    g.beginFill(0xffffff, 1);
+    g.drawCircle(0, 0, 6);
+    g.endFill();
+  });
+
+  KeyPressure.addKeyupListener(17, () => {
+    g.clear();
+    g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
+    g.beginFill(0x000000, 1);
+    g.drawCircle(0, 0, 7);
+    g.endFill();
+    g.beginFill(0xffffff, 1);
+    g.drawCircle(0, 0, 6);
+    g.endFill();
+  });
+
   g.on("pointerdown", (e) => {
+    // If ctrl pressed
     if (KeyPressure.keys[17]) {
-      // control
       if (LineTargetA.target && LineTargetA.target.id !== e.target.id) {
+        // STATE: add a new line, change to add an edge
         AppSingleton.app.stage.addChild(makeLine(e.target)); // either need to do collision detection or need an event handler on the objects. If I need to do on objects, how do I make a shared context
         LineTargetA.target = undefined;
       } else {
-        console.log(KeyPressure.keys);
         LineTargetA.target = e.target;
       }
     } else {

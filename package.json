@@ -8,6 +8,9 @@
     "serve": "vite preview"
   },
   "esLintConfig": {
+    "extends": [
+      "plugin:valtio/recommended"
+    ],
     "react": {
       "pragma": "React",
       "version": "17.0.2"
@@ -18,19 +21,29 @@
     "@types/react-dom": "17.0.17",
     "@vitejs/plugin-react": "2.0.0",
     "chevrotain": "10.1.2",
+    "eslint-plugin-valtio": "0.6.0",
+    "graphology": "0.24.1",
+    "graphology-generators": "0.11.2",
+    "graphology-types": "0.24.4",
     "hotkeys-js": "3.9.4",
-    "jotai": "1.7.8",
+    "lodash": "4.17.1",
     "monaco-editor": "0.34.0",
+    "pixi-fps": "2.0.1",
     "pixi.js": "6.5.1",
     "prop-types": "15.8.1",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "typescript": "4.7.4",
-    "vite": "3.0.5"
+    "valtio": "1.6.3",
+    "vite": "3.0.5",
+    "localforage": "1.10.0"
   },
   "engines": {
     "node": ">=16"
   },
   "keywords": [],
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@types/lodash": "^4.14.183"
+  }
 }

@@ -1,10 +1,18 @@
-import { Application } from "pixi.js";
+import { Application, Container, DisplayObject } from "pixi.js";
 
 /** A Singleton to Store the App In  */
 class AppSingleton {
   static _instance: any; // For tracking singleton status
 
-  app: any;
+  app: Application = new Application({
+    backgroundColor: 0xf0f0f0,
+    antialias: true,
+    autoDensity: true,
+    resizeTo: document.getElementById("app")!,
+  });
+
+  stage: Container<DisplayObject> = this.app.stage;
+  graphContainer = new Container();
 
   constructor() {
     // Make singleton
@@ -13,13 +21,14 @@ class AppSingleton {
     }
     AppSingleton._instance = this;
 
-    this.app = new Application({
-      width: 500,
-      height: 350,
-      backgroundColor: 0xf0f0f0,
-      antialias: true,
-    });
     this.app.stage.sortableChildren = true; // make zIndex work
+
+    window.addEventListener("resize", (e) => {
+      this.app.resize();
+    });
+
+    // TODO make the components and lines go in here
+    this.stage.addChild(this.graphContainer);
   }
 }
 

@@ -1,7 +1,6 @@
 import chevrotain from "chevrotain";
 
-// (function jsonGrammarOnlyExample() {
-function WardleyScript() {
+export function WardleyScript() {
   // ----------------- Lexer -----------------
   const createToken = chevrotain.createToken;
   const Lexer = chevrotain.Lexer;
@@ -17,29 +16,29 @@ function WardleyScript() {
   const NewLine = createToken({
     name: "NewLine",
     pattern: /\r?\n+/,
-    line_breaks: true
+    line_breaks: true,
   });
 
   const StringLiteral = createToken({
     name: "StringLiteral",
-    pattern: /[a-zA-Z0-9_]+([ -]+[a-zA-Z0-9_]+)*/
+    pattern: /[a-zA-Z0-9_]+([ -]+[a-zA-Z0-9_]+)*/,
   });
 
   const NumberLiteral = createToken({
     name: "NumberLiteral",
-    pattern: /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/
+    pattern: /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/,
   });
 
   const WhiteSpace = createToken({
     name: "WhiteSpace",
-    pattern: /[ \t]+/
+    pattern: /[ \t]+/,
     // group: Lexer.SKIPPED
   });
 
   const SkippedWhiteSpace = createToken({
     name: "SkippedWhiteSpace",
     pattern: /[ \t]{1,}/,
-    group: Lexer.SKIPPED
+    group: Lexer.SKIPPED,
   });
 
   const wardleyTokens = [
@@ -53,12 +52,12 @@ function WardleyScript() {
     StringLiteral,
     NewLine,
     WhiteSpace,
-    SkippedWhiteSpace
+    SkippedWhiteSpace,
   ];
 
   const WardleyLexer = new Lexer(wardleyTokens, {
     // Less position info tracked, reduces verbosity of the playground output.
-    positionTracking: "onlyStart"
+    positionTracking: "onlyStart",
   });
 
   // Labels only affect error messages and Diagrams.
@@ -71,7 +70,7 @@ function WardleyScript() {
   class WardleyParser extends chevrotain.CstParser {
     constructor() {
       super(wardleyTokens, {
-        recoveryEnabled: false
+        recoveryEnabled: false,
       });
 
       const $ = this;
@@ -81,7 +80,7 @@ function WardleyScript() {
           $.OR([
             { ALT: () => $.SUBRULE($.declaration) },
             { ALT: () => $.CONSUME(NewLine) },
-            { ALT: () => $.CONSUME(WhiteSpace) }
+            { ALT: () => $.CONSUME(WhiteSpace) },
           ]);
         });
       });
@@ -89,7 +88,7 @@ function WardleyScript() {
       $.RULE("declaration", () => {
         $.OR([
           { ALT: () => $.SUBRULE($.componentDeclaration) },
-          { ALT: () => $.SUBRULE($.edgeDeclaration) }
+          { ALT: () => $.SUBRULE($.edgeDeclaration) },
         ]);
         $.OPTION(() => $.CONSUME(WhiteSpace));
       });
@@ -106,8 +105,8 @@ function WardleyScript() {
         $.CONSUME(Component);
         $.CONSUME(WhiteSpace);
         $.CONSUME(StringLiteral);
-        $.CONSUME2(WhiteSpace);
-        $.OPTION(() => $.SUBRULE($.coordinates));
+        $.OPTION(() => $.CONSUME2(WhiteSpace));
+        $.OPTION1(() => $.SUBRULE($.coordinates));
       });
 
       $.RULE("coordinates", () => {
@@ -133,8 +132,91 @@ function WardleyScript() {
   return {
     lexer: WardleyLexer,
     parser: WardleyParser,
-    defaultRule: "wardley"
+    defaultRule: "wardley",
   };
 }
 
-WardleyScript();
+const { lexer, parser } = WardleyScript();
+
+const parserInstance = new parser();
+
+const BaseWardleyVisitor = parserInstance.getBaseCstVisitorConstructor();
+
+class WardleyVisitor extends BaseWardleyVisitor {
+  constructor() {
+    super();
+    // The "validateVisitor" method is a helper utility which performs static analysis
+    // to detect missing or redundant visitor methods
+    this.validateVisitor();
+  }
+  /* Visit methods */
+  wardley(ctx) {
+    return ctx.declaration.map((dec) => this.visit(dec));
+  }
+
+  declaration(ctx) {
+    let dec = undefined;
+    if (ctx.componentDeclaration) {
+      dec = this.visit(ctx.componentDeclaration[0]);
+    } else if (ctx.edgeDeclaration) {
+      dec = this.visit(ctx.edgeDeclaration[0]);
+    }
+    return dec;
+  }
+
+  edgeDeclaration(ctx) {
+    return {
+      type: "edgeDeclaration",
+      lhs: ctx.LHS[0].image,
+      rhs: ctx.RHS[0].image,
+    };
+  }
+
+  componentDeclaration(ctx) {
+    let coordinates = undefined;
+    if (ctx.coordinates) {
+      coordinates = this.visit(ctx.coordinates[0]);
+    }
+    return {
+      type: "componentDeclaration",
+      componentName: ctx.StringLiteral[0].image,
+      coordinates,
+    };
+  }
+
+  coordinates(ctx) {
+    return [Number(ctx.LHS[0].image), Number(ctx.RHS[0].image)];
+  }
+}
+
+type CoordinatesASTT = [number, number] | undefined;
+
+interface ComponentDeclarationASTT {
+  type: "componentDeclaration";
+  componentName: string;
+  coordinates: CoordinatesASTT;
+}
+
+interface EdgeDeclarationASTT {
+  type: "edgeDeclaration";
+  lhs: string;
+  rhs: string;
+}
+
+type DeclarationASTT = ComponentDeclarationASTT | EdgeDeclarationASTT;
+
+export type WardleyASTT = DeclarationASTT[];
+
+export function parseInput(text: string) {
+  parserInstance.input = lexer.tokenize(text).tokens;
+
+  // Initiate parse from top level declaration ("wardley")
+  const cst = parserInstance.wardley();
+  if (parserInstance.errors.length > 0) {
+    throw Error("Parsing errors detected\n" + parserInstance.errors[0].message);
+  }
+
+  const visitorInstance = new WardleyVisitor();
+
+  return visitorInstance.visit(cst) as WardleyASTT;
+}
