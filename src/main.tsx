@@ -1,16 +1,11 @@
 import "./index.css";
 
-import {
-  Component,
-  Line,
-  ExtendedGraphics,
-} from "./render/components/Component";
+import { ExtendedGraphics } from "./render/components/types";
+import { Component } from "./render/components/Component";
+import { Line } from "./render/components/Line";
 
 import AppSingleton from "./render/components/AppSingleton";
 import ObjectIDCounter from "./state/utilities/ObjectIDCounter";
-
-import PixiFps from "pixi-fps";
-import { Container } from "pixi.js";
 
 import localforage from "localforage";
 
@@ -105,8 +100,8 @@ window.graph = graph;
 
 const run = (elementId: string) => {
   // Bind app view to root html element
-  document.getElementById(elementId)?.appendChild(AppSingleton.app.view);
-  AppSingleton.app.resize();
+  document.getElementById(elementId)?.appendChild(AppSingleton.view);
+  AppSingleton.resize();
 
   subscribe(state.ast, () => {
     window.graph.clear();
@@ -117,9 +112,8 @@ const run = (elementId: string) => {
         if (declaration.coordinates) {
           // wardleyscript has coordinates backwards
           const y =
-            (1 - declaration.coordinates[0]) * AppSingleton.app.renderer.height;
-          const x =
-            declaration.coordinates[1] * AppSingleton.app.renderer.width;
+            (1 - declaration.coordinates[0]) * AppSingleton.renderer.height;
+          const x = declaration.coordinates[1] * AppSingleton.renderer.width;
           component = Component(x, y);
         } else {
           component = Component(20, 20);
@@ -151,23 +145,22 @@ const run = (elementId: string) => {
   });
 
   window.graph.on("cleared", function () {
-    AppSingleton.app.stage.removeChildren();
-    AppSingleton.app.stage.addChild(new PixiFps());
+    AppSingleton.graphContainer.removeChildren();
   });
 
   window.graph.on("nodeAdded", ({ attributes }) => {
     if (attributes.component && !attributes.mounted) {
-      AppSingleton.app.stage.addChild(attributes.component);
+      AppSingleton.graphContainer.addChild(attributes.component);
       attributes.mounted = true;
     }
   });
 
   window.graph.on("edgeAdded", ({ source, target, attributes }) => {
-    AppSingleton.app.stage.addChild(attributes.component);
+    AppSingleton.graphContainer.addChild(attributes.component);
     attributes.mounted = true;
   });
 
-  AppSingleton.app.renderer.view.addEventListener("mousedown", (e: any) => {
+  AppSingleton.view.addEventListener("mousedown", (e: any) => {
     if (e.detail % 2 === 0) {
       // Might double click twice within 200ms
       window.graph.addNode(ObjectIDCounter.getID(), {

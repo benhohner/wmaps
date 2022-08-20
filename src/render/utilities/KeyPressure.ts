@@ -1,6 +1,7 @@
 type SparseBooleanArray = boolean | undefined;
 
 type ListenerArray = [number, Function];
+
 /** Gets a live updating list of all pressed keys */
 class KeyPressure {
   static _instance: KeyPressure; // For tracking singleton status
@@ -34,6 +35,7 @@ class KeyPressure {
         });
       }
     };
+
     scope.onkeyup = (e) => {
       this._keyupListeners.forEach((listener) => {
         if (listener[0] === e.keyCode) {

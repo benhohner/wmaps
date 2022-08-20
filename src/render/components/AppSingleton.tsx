@@ -1,34 +1,36 @@
-import { Application, Container, DisplayObject } from "pixi.js";
+import { Application, Container } from "pixi.js";
+import PixiFps from "pixi-fps";
 
-/** A Singleton to Store the App In  */
-class AppSingleton {
-  static _instance: any; // For tracking singleton status
+class AppSingleton extends Application {
+  static _instance: AppSingleton;
 
-  app: Application = new Application({
-    backgroundColor: 0xf0f0f0,
-    antialias: true,
-    autoDensity: true,
-    resizeTo: document.getElementById("app")!,
-  });
-
-  stage: Container<DisplayObject> = this.app.stage;
   graphContainer = new Container();
 
   constructor() {
-    // Make singleton
     if (AppSingleton._instance) {
       return AppSingleton._instance;
     }
-    AppSingleton._instance = this;
 
-    this.app.stage.sortableChildren = true; // make zIndex work
-
-    window.addEventListener("resize", (e) => {
-      this.app.resize();
+    super({
+      backgroundColor: 0xf0f0f0,
+      antialias: true,
+      autoDensity: true,
+      resizeTo: document.getElementById("app")!,
     });
 
-    // TODO make the components and lines go in here
+    AppSingleton._instance = this;
+
+    // Resize container on window resize
+    window.addEventListener("resize", (e) => {
+      this.resize();
+    });
+
+    // A container to hold all components, lines, text
     this.stage.addChild(this.graphContainer);
+    this.graphContainer.sortableChildren = true; // make zIndex work
+
+    // FPS Monitor
+    this.stage.addChild(new PixiFps());
   }
 }
 

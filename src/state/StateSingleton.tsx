@@ -4,6 +4,7 @@ import { proxy } from "valtio";
 class StateSingleton {
   static _instance: any; // For tracking singleton status
 
+  // TODO: finish moving state to this file
   state: object = proxy({});
 
   constructor() {

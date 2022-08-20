@@ -4,51 +4,12 @@ import KeyPressure from "../utilities/KeyPressure";
 import ObjectIDCounter from "../../state/utilities/ObjectIDCounter";
 import { setDraggable } from "../utilities/Draggable";
 
+import { ExtendedGraphics } from "./types";
+
 import LineTargetA from "../utilities/LineTargetA";
+import { Line } from "./Line";
 
 import AppSingleton from "./AppSingleton";
-
-export type ExtendedGraphics = PIXI.Graphics &
-  PIXI.DisplayObject & {
-    id?: number;
-    ticker?: PIXI.Ticker;
-  };
-
-export const Line = (
-  componentA: ExtendedGraphics,
-  componentB: ExtendedGraphics
-): ExtendedGraphics => {
-  const graphics: ExtendedGraphics = new PIXI.Graphics();
-  graphics.lineStyle(1, 0x000000, 1, 0.5, false);
-  graphics.moveTo(componentA.x, componentA.y);
-  graphics.lineTo(componentB.x, componentB.y);
-  graphics.endFill();
-
-  graphics.zIndex = -1;
-
-  graphics.id = ObjectIDCounter.getID();
-
-  // STATE: kind of, at least updates here
-  graphics.ticker = AppSingleton.app.ticker.add((delta: number) => {
-    graphics.clear();
-    graphics.lineStyle(1, 0x000000, 1, 0.5, false);
-    graphics.moveTo(componentA.x, componentA.y);
-    graphics.lineTo(componentB.x, componentB.y);
-    graphics.endFill();
-  });
-
-  return graphics;
-};
-
-const makeLine = (lineTargetB: any) => {
-  // Don't allow connecting component to itself
-  if (LineTargetA.target.id === lineTargetB.id) {
-    LineTargetA.target = undefined;
-    return;
-  }
-
-  return Line(LineTargetA.target, lineTargetB);
-};
 
 export const Component = (x: number, y: number) => {
   let g: ExtendedGraphics = new PIXI.Graphics();
@@ -90,16 +51,18 @@ export const Component = (x: number, y: number) => {
   g.on("pointerdown", (e) => {
     // If ctrl pressed
     if (KeyPressure.keys[17]) {
-      if (LineTargetA.target && LineTargetA.target.id !== e.target.id) {
-        // STATE: add a new line, change to add an edge
-        AppSingleton.app.stage.addChild(makeLine(e.target)); // either need to do collision detection or need an event handler on the objects. If I need to do on objects, how do I make a shared context
-        LineTargetA.target = undefined;
-      } else {
+      if (!LineTargetA.target) {
         LineTargetA.target = e.target;
+        return;
+      } else if (LineTargetA.target && LineTargetA.target.id !== e.target.id) {
+        // ^ If not trying to link a component to itself
+        AppSingleton.graphContainer.addChild(
+          Line(LineTargetA.target, e.target)
+        );
       }
-    } else {
-      LineTargetA.target = undefined;
     }
+    // Reset if clicking self component or not holding control
+    LineTargetA.target = undefined;
   });
 
   return g;
