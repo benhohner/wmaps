@@ -25,7 +25,6 @@ class AppSingleton extends Application {
     AppSingleton._instance = this;
 
     // Create a font for usage
-    // BUG: for some reason graphology doesn't support "+" in key. look into
     BitmapFont.from(
       "TitleFont",
       {
