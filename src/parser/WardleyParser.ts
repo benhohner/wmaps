@@ -21,7 +21,7 @@ export function WardleyScript() {
 
   const StringLiteral = createToken({
     name: "StringLiteral",
-    pattern: /[a-zA-Z0-9_]+([ -]+[a-zA-Z0-9_]+)*/,
+    pattern: /[a-zA-Z0-9_\/\+]+([ -]+[a-zA-Z0-9_\/\+]+)*/,
   });
 
   const NumberLiteral = createToken({

@@ -5,9 +5,17 @@ body {
   flex-direction: column;
 }
 
+#editor,
+#app {
+  max-height: 50vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 #editor {
   flex-grow: 1;
-  max-height: 50vh;
+  min-height: 50vh;
 }
 
 #app {

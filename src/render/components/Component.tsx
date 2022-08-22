@@ -1,18 +1,24 @@
 import * as PIXI from "pixi.js";
 
 import KeyPressure from "../utilities/KeyPressure";
-import ObjectIDCounter from "../../state/utilities/ObjectIDCounter";
-import { setDraggable } from "../utilities/Draggable";
+import { setDraggable, ObjectUpdateStrategy } from "../utilities/Draggable";
 
-import { ExtendedGraphics } from "./types";
+import { ComponentT } from "./types";
 
-import LineTargetA from "../utilities/LineTargetA";
-import { Line } from "./Line";
+import { state, setLineTargetA } from "../../state/State";
 
-import AppSingleton from "./AppSingleton";
+import { addEdge, updateComponentPosition } from "../../state/Graph";
 
-export const Component = (x: number, y: number) => {
-  let g: ExtendedGraphics = new PIXI.Graphics();
+export const Component = (
+  x: number,
+  y: number,
+  id: number,
+  nodeKey: string
+) => {
+  let g = new PIXI.Graphics() as ComponentT;
+
+  g.id = id;
+  g.nodeKey = nodeKey;
 
   g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
   g.beginFill(0x000000, 1);
@@ -22,11 +28,24 @@ export const Component = (x: number, y: number) => {
   g.drawCircle(0, 0, 6);
   g.endFill();
   g.position = new PIXI.Point(x, y);
-  g.id = ObjectIDCounter.getID();
 
-  setDraggable(g);
+  const text = new PIXI.BitmapText(nodeKey, {
+    fontName: "TitleFont",
+    fontSize: 14,
+  });
 
-  KeyPressure.addKeydownListener(17, () => {
+  text.x = 8;
+  text.y = -15;
+
+  g.addChild(text);
+
+  const graphUpdateStrategy: ObjectUpdateStrategy = (obj, x, y) => {
+    updateComponentPosition(obj.nodeKey, x, y);
+  };
+
+  setDraggable(g, undefined, undefined, undefined, graphUpdateStrategy);
+
+  const keydownListenerID = KeyPressure.addKeydownListener(17, () => {
     g.clear();
     g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
     g.beginFill(0x0f30a0, 1);
@@ -37,7 +56,7 @@ export const Component = (x: number, y: number) => {
     g.endFill();
   });
 
-  KeyPressure.addKeyupListener(17, () => {
+  const keyupListenerID = KeyPressure.addKeyupListener(17, () => {
     g.clear();
     g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
     g.beginFill(0x000000, 1);
@@ -51,18 +70,25 @@ export const Component = (x: number, y: number) => {
   g.on("pointerdown", (e) => {
     // If ctrl pressed
     if (KeyPressure.keys[17]) {
-      if (!LineTargetA.target) {
-        LineTargetA.target = e.target;
+      if (!state.interact.lineTargetA) {
+        setLineTargetA(e.target);
         return;
-      } else if (LineTargetA.target && LineTargetA.target.id !== e.target.id) {
+      } else if (
+        state.interact.lineTargetA &&
+        state.interact.lineTargetA.id !== e.target.id
+      ) {
         // ^ If not trying to link a component to itself
-        AppSingleton.graphContainer.addChild(
-          Line(LineTargetA.target, e.target)
-        );
+        addEdge(state.interact.lineTargetA.nodeKey, e.target.nodeKey);
       }
     }
     // Reset if clicking self component or not holding control
-    LineTargetA.target = undefined;
+    setLineTargetA(undefined);
+  });
+
+  g.on("removed", () => {
+    KeyPressure.removeKeyupListener(keyupListenerID);
+    KeyPressure.removeKeydownListener(keydownListenerID);
+    g.destroy(true);
   });
 
   return g;
