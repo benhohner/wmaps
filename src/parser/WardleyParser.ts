@@ -21,7 +21,7 @@ export function WardleyScript() {
 
   const StringLiteral = createToken({
     name: "StringLiteral",
-    pattern: /[a-zA-Z0-9_\/\+]+([ -]+[a-zA-Z0-9_\/\+]+)*/,
+    pattern: /[a-zA-Z0-9_\/\+:]+([ -]+[a-zA-Z0-9_\/\+:]+)*/,
   });
 
   const NumberLiteral = createToken({
@@ -76,7 +76,7 @@ export function WardleyScript() {
       const $ = this;
 
       $.RULE("wardley", () => {
-        $.AT_LEAST_ONE(() => {
+        $.MANY(() => {
           $.OR([
             { ALT: () => $.SUBRULE($.declaration) },
             { ALT: () => $.CONSUME(NewLine) },
@@ -151,7 +151,11 @@ class WardleyVisitor extends BaseWardleyVisitor {
   }
   /* Visit methods */
   wardley(ctx) {
-    return ctx.declaration.map((dec) => this.visit(dec));
+    if (ctx.declaration) {
+      return ctx.declaration.map((dec) => this.visit(dec));
+    } else {
+      return [];
+    }
   }
 
   declaration(ctx) {
