@@ -1,6 +1,5 @@
 import * as PIXI from "pixi.js";
 
-import partial from "lodash/partial";
 import { ExtendedGraphics } from "../components/types";
 
 interface DragObject extends ExtendedGraphics {
@@ -115,25 +114,10 @@ export function setDraggable(
   obj.interactive = true;
   obj.buttonMode = true;
 
-  obj.on(
-    "pointerdown",
-    partial(onDragStart, partial.placeholder, onDragStartCallback)
-  );
-  obj.on(
-    "pointerup",
-    partial(onDragEnd, partial.placeholder, onDragEndCallback)
-  );
-  obj.on(
-    "pointerupoutside",
-    partial(onDragEnd, partial.placeholder, onDragEndCallback)
-  );
-  obj.on(
-    "pointermove",
-    partial(
-      onDragMove,
-      partial.placeholder,
-      onDragMoveCallback,
-      objectUpdateStrategy
-    )
+  obj.on("pointerdown", (e) => onDragStart(e, onDragStartCallback));
+  obj.on("pointerup", (e) => onDragEnd(e, onDragEndCallback));
+  obj.on("pointerupoutside", (e) => onDragEnd(e, onDragEndCallback));
+  obj.on("pointermove", (e) =>
+    onDragMove(e, onDragMoveCallback, objectUpdateStrategy)
   );
 }

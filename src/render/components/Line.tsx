@@ -2,10 +2,6 @@ import { Graphics, Ticker } from "pixi.js";
 
 import { LineT, ComponentT } from "./types";
 
-import { getObjectID } from "../../state/State";
-
-import AppSingleton from "./AppSingleton";
-
 export const Line = (
   componentAx: number,
   componentAy: number,
@@ -16,7 +12,7 @@ export const Line = (
 ): LineT => {
   const g = new Graphics() as LineT;
 
-  g.lineStyle(1, 0x000000, 1, 0.5, false);
+  g.lineStyle(48, 0x000000, 1, 0.5, true);
   g.moveTo(componentAx, componentAy);
   g.lineTo(componentBx, componentBy);
   g.endFill();
@@ -32,7 +28,7 @@ export const Line = (
     componentBy: number
   ) => {
     g.clear();
-    g.lineStyle(1, 0x000000, 1, 0.5, false);
+    g.lineStyle(48, 0x000000, 1, 0.5, true);
     g.moveTo(componentAx, componentAy);
     g.lineTo(componentBx, componentBy);
     g.endFill();

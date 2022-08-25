@@ -1,7 +1,6 @@
- import isEqual from "lodash/isEqual";
+import isEqual from "lodash/isEqual";
 
 import Graph from "graphology";
-import EdgeIterationCallback from "graphology";
 
 import AppSingleton from "../render/components/AppSingleton";
 import { Component } from "../render/components/Component";
@@ -9,8 +8,13 @@ import { Line } from "../render/components/Line";
 import { ComponentT, LineT } from "../render/components/types";
 
 import { state, subscribe, getObjectID, setLineTargetA } from "./State";
+import {
+  parseInputWithVisitor,
+  BaseWardleyVisitor,
+  parseInputToCST,
+} from "../parser/WardleyParser";
 
-type NodeAttributes = {
+export type NodeAttributes = {
   type: "component";
   nodeKey: string;
   id: number;
@@ -19,7 +23,7 @@ type NodeAttributes = {
   mounted: boolean;
 };
 
-type EdgeAttributes = {
+export type EdgeAttributes = {
   type: "edge";
   nodeKey: string;
   id: number;
@@ -31,12 +35,17 @@ type EdgeAttributes = {
   mounted: boolean;
 };
 
-type GraphAttributes = {
+export type GraphAttributes = {
   name?: string;
 };
 
-export const graph: Graph<NodeAttributes, EdgeAttributes, GraphAttributes> =
-  new Graph({ type: "undirected" });
+export type WardleyGraph = Graph<
+  NodeAttributes,
+  EdgeAttributes,
+  GraphAttributes
+>;
+
+export const graph: WardleyGraph = new Graph({ type: "undirected" });
 
 // Allow adding to window object
 // declare global {
@@ -144,56 +153,129 @@ const updateEdgePosition = (
 };
 
 // SUBSCRIPTIONS
-export const rerenderGraph = () => {
-  // Don't keep reference to deleted item
-  setLineTargetA(undefined);
+// export const rerenderGraph :  = () => {
+//   // Don't keep reference to deleted item
+//   setLineTargetA(undefined);
 
-  graph.clear();
+//   graph.clear();
 
-  state.ast.astArr.forEach((dec) => {
-    if (dec.type === "componentDeclaration") {
-      if (dec.coordinates) {
-        // wardleyscript has coordinates backwards
-        const y =
-          ((1 - dec.coordinates[0]) * AppSingleton.renderer.height) /
-          AppSingleton.renderer.resolution;
-        const x =
-          (dec.coordinates[1] * AppSingleton.renderer.width) /
-          AppSingleton.renderer.resolution;
+// state.ast.astArr.forEach((dec) => {
+//   if (dec.type === "componentDeclaration") {
+//     if (dec.coordinates) {
+//       // wardleyscript has coordinates backwards
+//       const y =
+//         ((1 - dec.coordinates[0]) * AppSingleton.renderer.height) /
+//         AppSingleton.renderer.resolution;
+//       const x =
+//         (dec.coordinates[1] * AppSingleton.renderer.width) /
+//         AppSingleton.renderer.resolution;
 
-        addComponent(x, y, dec.componentName);
-      } else {
-        addComponent(20, 20, dec.componentName);
-      }
-    }
-  });
+//       addComponent(x, y, dec.componentName);
+//     } else {
+//       addComponent(20, 20, dec.componentName);
+//     }
+//   }
+// });
 
-  state.ast.astArr.forEach((dec) => {
-    if (dec.type === "edgeDeclaration") {
-      addEdge(dec.lhs, dec.rhs);
-    }
-  });
-};
+export class WardleyVisitorToGraph extends BaseWardleyVisitor {
+  graph: WardleyGraph;
 
-subscribe(state.ast, () => {
-  // Try to prevent deep object diffing as it's slow
-  if (state.ast.astArr.length !== state.lastAst.astArr.length) {
-    state.lastAst.astArr = state.ast.astArr;
-    rerenderGraph();
-    return;
+  constructor(graph: WardleyGraph) {
+    super();
+    this.graph = graph;
+    // The "validateVisitor" method is a helper utility which performs static analysis
+    // to detect missing or redundant visitor methods
+    this.validateVisitor();
   }
 
-  for (let i = 0; i < state.ast.astArr.length; i++) {
-    if (state.ast.astArr[i].type !== state.lastAst.astArr[i].type) {
-      state.lastAst.astArr = state.ast.astArr;
-      rerenderGraph();
-      return;
-    } else if (!isEqual(state.ast.astArr[i], state.lastAst.astArr[i])) {
-      state.lastAst.astArr = state.ast.astArr;
-      rerenderGraph();
-      return;
+  // TODO: Update to build graph as we go
+  /* Visit methods */
+  wardley(ctx) {
+    if (ctx.declaration) {
+      setLineTargetA(undefined);
+
+      graph.clear();
+
+      ctx.declaration.forEach((dec) => {
+        const edgeDec = this.visit(dec);
+
+        if (edgeDec) {
+          addEdge(edgeDec.lhs, edgeDec.rhs);
+        }
+      });
     }
   }
+
+  declaration(ctx) {
+    if (ctx.componentDeclaration) {
+      this.visit(ctx.componentDeclaration[0]);
+      return false;
+    } else if (ctx.edgeDeclaration) {
+      // we only return edgeDecs because they need to be created last
+      // so pass them to the top level function which will run last
+      return this.visit(ctx.edgeDeclaration[0]);
+    }
+  }
+
+  edgeDeclaration(ctx) {
+    return {
+      type: "edgeDeclaration",
+      lhs: ctx.LHS[0].image,
+      rhs: ctx.RHS[0].image,
+    };
+  }
+
+  componentDeclaration(ctx) {
+    if (ctx.coordinates) {
+      const coordinates = this.visit(ctx.coordinates[0]);
+
+      // wardleyscript has coordinates backwards
+      const y =
+        ((1 - coordinates[0]) * AppSingleton.renderer.height) /
+        AppSingleton.renderer.resolution;
+      const x =
+        (coordinates[1] * AppSingleton.renderer.width) /
+        AppSingleton.renderer.resolution;
+
+      addComponent(x, y, ctx.StringLiteral[0].image);
+    } else {
+      addComponent(20, 20, ctx.StringLiteral[0].image);
+    }
+  }
+
+  coordinates(ctx) {
+    return [Number(ctx.LHS[0].image), Number(ctx.RHS[0].image)];
+  }
+}
+
+const visitorInstance = new WardleyVisitorToGraph(graph);
+
+export const rerenderGraph = () =>
+  visitorInstance.visit(parseInputToCST(state.editor.editorText));
+
+// SUBSCRIPTIONS
+subscribe(state.editor, () => {
+  // TODO: read lazy update checking to see if text makes a different graph than before
+
+  //   if (state.ast.astArr.length !== state.lastAst.astArr.length) {
+  //     state.lastAst.astArr = state.ast.astArr;
+  //     rerenderGraph();
+  //     return;
+  //   }
+
+  //   for (let i = 0; i < state.ast.astArr.length; i++) {
+  //     if (state.ast.astArr[i].type !== state.lastAst.astArr[i].type) {
+  //       state.lastAst.astArr = state.ast.astArr;
+  //       rerenderGraph();
+  //       return;
+  //     } else if (!isEqual(state.ast.astArr[i], state.lastAst.astArr[i])) {
+  //       state.lastAst.astArr = state.ast.astArr;
+  //       rerenderGraph();
+  //       return;
+  //     }
+  //   }
+
+  rerenderGraph();
 });
 
 graph.on("cleared", function () {

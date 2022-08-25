@@ -140,9 +140,12 @@ const { lexer, parser } = WardleyScript();
 
 const parserInstance = new parser();
 
-const BaseWardleyVisitor = parserInstance.getBaseCstVisitorConstructor();
+export const BaseWardleyVisitor = parserInstance.getBaseCstVisitorConstructor();
+export type BaseWardleyVisitorT = new (
+  ...args: any[]
+) => chevrotain.ICstVisitor<any, any>;
 
-class WardleyVisitor extends BaseWardleyVisitor {
+class WardleyVisitorToAST extends BaseWardleyVisitor {
   constructor() {
     super();
     // The "validateVisitor" method is a helper utility which performs static analysis
@@ -216,11 +219,24 @@ export function parseInput(text: string) {
 
   // Initiate parse from top level declaration ("wardley")
   const cst = parserInstance.wardley();
+
   if (parserInstance.errors.length > 0) {
     throw Error("Parsing errors detected\n" + parserInstance.errors[0].message);
   }
 
-  const visitorInstance = new WardleyVisitor();
-
+  const visitorInstance = new WardleyVisitorToAST();
   return visitorInstance.visit(cst) as WardleyASTT;
+}
+
+export function parseInputToCST(text: string) {
+  parserInstance.input = lexer.tokenize(text).tokens;
+
+  // Initiate parse from top level declaration ("wardley")
+  const cst = parserInstance.wardley();
+
+  if (parserInstance.errors.length > 0) {
+    throw Error("Parsing errors detected\n" + parserInstance.errors[0].message);
+  }
+
+  return cst;
 }

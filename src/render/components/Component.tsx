@@ -8,6 +8,18 @@ import { ComponentT } from "./types";
 import { state, setLineTargetA } from "../../state/State";
 
 import { addEdge, updateComponentPosition } from "../../state/Graph";
+const BaseComponent = new PIXI.Graphics()
+  .lineStyle(0)
+  .beginFill(0x000000, 1)
+  .drawCircle(0, 0, 7)
+  .endFill()
+  .beginFill(0xffffff, 1)
+  .drawCircle(0, 0, 6)
+  .endFill();
+
+const graphUpdateStrategy: ObjectUpdateStrategy = (obj, x, y) => {
+  updateComponentPosition(obj.nodeKey, x, y);
+};
 
 export const Component = (
   x: number,
@@ -15,18 +27,10 @@ export const Component = (
   id: number,
   nodeKey: string
 ) => {
-  let g = new PIXI.Graphics() as ComponentT;
+  let g = BaseComponent.clone() as ComponentT;
 
   g.id = id;
   g.nodeKey = nodeKey;
-
-  g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
-  g.beginFill(0x000000, 1);
-  g.drawCircle(0, 0, 7);
-  g.endFill();
-  g.beginFill(0xffffff, 1);
-  g.drawCircle(0, 0, 6);
-  g.endFill();
   g.position = new PIXI.Point(x, y);
 
   const text = new PIXI.BitmapText(nodeKey, {
@@ -38,10 +42,6 @@ export const Component = (
   text.y = -15;
 
   g.addChild(text);
-
-  const graphUpdateStrategy: ObjectUpdateStrategy = (obj, x, y) => {
-    updateComponentPosition(obj.nodeKey, x, y);
-  };
 
   setDraggable(g, undefined, undefined, undefined, graphUpdateStrategy);
 
@@ -88,7 +88,8 @@ export const Component = (
   g.on("removed", () => {
     KeyPressure.removeKeyupListener(keyupListenerID);
     KeyPressure.removeKeydownListener(keydownListenerID);
-    g.destroy(true);
+    text.destroy();
+    g.destroy();
   });
 
   return g;
