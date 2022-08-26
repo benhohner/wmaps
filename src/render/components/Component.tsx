@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js";
+import { Graphics, Point, BitmapText } from "pixi.js";
 
 import KeyPressure from "../utilities/KeyPressure";
 import { setDraggable, ObjectUpdateStrategy } from "../utilities/Draggable";
@@ -8,7 +8,7 @@ import { ComponentT } from "./types";
 import { state, setLineTargetA } from "../../state/State";
 
 import { addEdge, updateComponentPosition } from "../../state/Graph";
-const BaseComponent = new PIXI.Graphics()
+const BaseComponent = new Graphics()
   .lineStyle(0)
   .beginFill(0x000000, 1)
   .drawCircle(0, 0, 7)
@@ -31,9 +31,9 @@ export const Component = (
 
   g.id = id;
   g.nodeKey = nodeKey;
-  g.position = new PIXI.Point(x, y);
+  g.position = new Point(x, y);
 
-  const text = new PIXI.BitmapText(nodeKey, {
+  const text = new BitmapText(nodeKey, {
     fontName: "TitleFont",
     fontSize: 14,
   });

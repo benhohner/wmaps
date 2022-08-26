@@ -1,10 +1,7 @@
-import chevrotain from "chevrotain";
+import { createToken, Lexer, CstParser, ICstVisitor } from "chevrotain";
 
 export function WardleyScript() {
   // ----------------- Lexer -----------------
-  const createToken = chevrotain.createToken;
-  const Lexer = chevrotain.Lexer;
-
   const Component = createToken({ name: "Component", pattern: /component/ });
   const Inertia = createToken({ name: "Inertia", pattern: /inertia/ });
   const Edge = createToken({ name: "Edge", pattern: /->/ });
@@ -67,7 +64,7 @@ export function WardleyScript() {
   Edge.LABEL = "'->'";
 
   // ----------------- parser -----------------
-  class WardleyParser extends chevrotain.CstParser {
+  class WardleyParser extends CstParser {
     constructor() {
       super(wardleyTokens, {
         recoveryEnabled: false,
@@ -141,9 +138,7 @@ const { lexer, parser } = WardleyScript();
 const parserInstance = new parser();
 
 export const BaseWardleyVisitor = parserInstance.getBaseCstVisitorConstructor();
-export type BaseWardleyVisitorT = new (
-  ...args: any[]
-) => chevrotain.ICstVisitor<any, any>;
+export type BaseWardleyVisitorT = new (...args: any[]) => ICstVisitor<any, any>;
 
 class WardleyVisitorToAST extends BaseWardleyVisitor {
   constructor() {

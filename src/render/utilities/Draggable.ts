@@ -1,18 +1,23 @@
-import * as PIXI from "pixi.js";
+import {
+  InteractionData,
+  Point,
+  InteractionEvent,
+  DisplayObject,
+} from "pixi.js";
 
 import { ExtendedGraphics } from "../components/types";
 
 interface DragObject extends ExtendedGraphics {
-  dragData: PIXI.InteractionData | undefined;
+  dragData: InteractionData | undefined;
   dragging: number;
-  dragPointerStart: PIXI.DisplayObject;
-  dragObjStart: PIXI.Point;
-  dragGlobalStart: PIXI.Point;
+  dragPointerStart: DisplayObject;
+  dragObjStart: Point;
+  dragGlobalStart: Point;
 }
 
-export type OnDragStartCallback = (event: PIXI.InteractionEvent) => void;
-export type OnDragMoveCallback = (event: PIXI.InteractionEvent) => void;
-export type OnDragEndCallback = (event: PIXI.InteractionEvent) => void;
+export type OnDragStartCallback = (event: InteractionEvent) => void;
+export type OnDragMoveCallback = (event: InteractionEvent) => void;
+export type OnDragEndCallback = (event: InteractionEvent) => void;
 
 export type ObjectUpdateStrategy = (
   obj: DragObject,
@@ -26,7 +31,7 @@ const defaultObjectUpdateStrategy = (obj: DragObject, x: number, y: number) => {
 };
 
 function onDragStart(
-  event: PIXI.InteractionEvent,
+  event: InteractionEvent,
   callback: OnDragStartCallback | undefined = undefined
 ) {
   const obj = event.currentTarget as DragObject;
@@ -37,10 +42,10 @@ function onDragStart(
 
   obj.dragPointerStart = event.data.getLocalPosition(obj.parent);
 
-  obj.dragObjStart = new PIXI.Point();
+  obj.dragObjStart = new Point();
   obj.dragObjStart.copyFrom(obj.position);
 
-  obj.dragGlobalStart = new PIXI.Point();
+  obj.dragGlobalStart = new Point();
   obj.dragGlobalStart.copyFrom(event.data.global);
 
   if (callback) {
@@ -49,7 +54,7 @@ function onDragStart(
 }
 
 function onDragEnd(
-  event: PIXI.InteractionEvent,
+  event: InteractionEvent,
   callback: OnDragEndCallback | undefined = undefined
 ) {
   const obj = event.currentTarget as DragObject;
@@ -67,7 +72,7 @@ function onDragEnd(
 }
 
 function onDragMove(
-  event: PIXI.InteractionEvent,
+  event: InteractionEvent,
   callback: OnDragMoveCallback | undefined = undefined,
   objectUpdateStrategy: ObjectUpdateStrategy = defaultObjectUpdateStrategy
 ) {
@@ -105,7 +110,7 @@ function onDragMove(
 }
 
 export function setDraggable(
-  obj: PIXI.DisplayObject,
+  obj: DisplayObject,
   onDragStartCallback: OnDragStartCallback | undefined = undefined,
   onDragMoveCallback: OnDragMoveCallback | undefined = undefined,
   onDragEndCallback: OnDragEndCallback | undefined = undefined,

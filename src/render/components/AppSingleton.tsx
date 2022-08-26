@@ -18,7 +18,7 @@ class AppSingleton extends Application {
       antialias: true,
       autoDensity: true,
       // this may introduce coordinate bugs
-      resolution: 3,
+      resolution: 2,
       resizeTo: document.getElementById("app")!,
     });
 

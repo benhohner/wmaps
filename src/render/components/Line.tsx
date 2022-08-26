@@ -49,11 +49,11 @@ export const Line = (
   //   g.ticker.start();
 
   g.on("removed", () => {
-    if (g.ticker) {
-      g.ticker.stop();
-      g.ticker.destroy();
-    }
-    g.destroy(true);
+    // if (g.ticker) {
+    //   g.ticker.stop();
+    //   g.ticker.destroy();
+    // }
+    g.destroy();
   });
 
   return g;
