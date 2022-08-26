@@ -1,6 +1,8 @@
 import { Application, Container, BitmapFont } from "pixi.js";
 import PixiFps from "pixi-fps";
 
+import throttle from "lodash/throttle";
+
 import { addComponent, rerenderGraph } from "../../state/Graph";
 
 class AppSingleton extends Application {
@@ -40,10 +42,10 @@ class AppSingleton extends Application {
     );
 
     // Resize container on window resize
-    const onResize = () => {
+    const onResize = throttle(() => {
       this.resize();
       rerenderGraph();
-    };
+    }, 32);
     window.addEventListener("resize", onResize);
 
     // A container to hold all components, lines, text
