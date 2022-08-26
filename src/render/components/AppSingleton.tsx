@@ -1,5 +1,5 @@
 import { Application, Container, BitmapFont } from "pixi.js";
-import PixiFps from "pixi-fps";
+import { FPSMonitor } from "../utilities/FPSMonitor";
 
 import throttle from "lodash/throttle";
 
@@ -53,7 +53,7 @@ class AppSingleton extends Application {
     this.graphContainer.sortableChildren = true; // make zIndex work
 
     // FPS Monitor
-    this.stage.addChild(new PixiFps());
+    this.stage.addChild(new FPSMonitor());
 
     this.view.addEventListener("mousedown", (e: any) => {
       // Might double click more than once within 200ms
