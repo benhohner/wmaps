@@ -168,14 +168,14 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
   }
 
   /* Visit methods */
-  wardley(ctx) {
+  wardley(ctx: any) {
     if (ctx.declaration) {
       // Don't keep reference to deleted item
       setLineTargetA(undefined);
 
       graph.clear();
 
-      ctx.declaration.forEach((dec) => {
+      ctx.declaration.forEach((dec: any) => {
         const edgeDec = this.visit(dec);
 
         if (edgeDec) {
@@ -185,7 +185,7 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
     }
   }
 
-  declaration(ctx) {
+  declaration(ctx: any) {
     if (ctx.componentDeclaration) {
       this.visit(ctx.componentDeclaration[0]);
       return false;
@@ -196,7 +196,7 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
     }
   }
 
-  edgeDeclaration(ctx) {
+  edgeDeclaration(ctx: any) {
     return {
       type: "edgeDeclaration",
       lhs: ctx.LHS[0].image,
@@ -204,25 +204,27 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
     };
   }
 
-  componentDeclaration(ctx) {
+  componentDeclaration(ctx: any) {
     if (ctx.coordinates) {
       const coordinates = this.visit(ctx.coordinates[0]);
 
       // wardleyscript has coordinates backwards
-      const y =
-        ((1 - coordinates[0]) * AppSingleton.renderer.height) /
-        AppSingleton.renderer.resolution;
-      const x =
-        (coordinates[1] * AppSingleton.renderer.width) /
-        AppSingleton.renderer.resolution;
+      const rendererCoords = AppSingleton.wardleyToRendererCoords(
+        coordinates[1],
+        coordinates[0]
+      );
 
-      addComponent(x, y, ctx.StringLiteral[0].image);
+      addComponent(
+        rendererCoords[0],
+        rendererCoords[1],
+        ctx.StringLiteral[0].image
+      );
     } else {
       addComponent(40, 40, ctx.StringLiteral[0].image);
     }
   }
 
-  coordinates(ctx) {
+  coordinates(ctx: any) {
     return [Number(ctx.LHS[0].image), Number(ctx.RHS[0].image)];
   }
 }

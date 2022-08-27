@@ -7,7 +7,7 @@ import {
 
 import { ExtendedGraphics } from "../components/types";
 
-interface DragObject extends ExtendedGraphics {
+export interface DragObject extends ExtendedGraphics {
   dragData: InteractionData | undefined;
   dragging: number;
   dragPointerStart: DisplayObject;
@@ -63,12 +63,11 @@ function onDragEnd(
 
   obj.dragging = 0;
 
-  // set the interaction data to null
-  delete obj.dragData;
-
   if (callback) {
     callback(event);
   }
+  // set the interaction data to null
+  delete obj.dragData;
 }
 
 function onDragMove(

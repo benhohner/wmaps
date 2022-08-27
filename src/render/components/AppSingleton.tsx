@@ -3,7 +3,9 @@ import { FPSMonitor } from "../utilities/FPSMonitor";
 
 import throttle from "lodash/throttle";
 
-import { addComponent, rerenderGraph } from "../../state/Graph";
+import { rerenderGraph } from "../../state/Graph";
+import { appendText } from "../../editor/Editor";
+import { getObjectID } from "../../state/State";
 
 // @ts-ignore
 Application.prototype.render = null; // Disable auto-rendering by removing the function
@@ -72,9 +74,28 @@ class AppSingleton extends Application {
     this.view.addEventListener("mousedown", (e: any) => {
       // Might double click more than once within 200ms
       if (e.detail % 2 === 0) {
-        addComponent(e.offsetX, e.offsetY);
+        const coords = this.rendererToWardleyCoords(e.offsetX, e.offsetY);
+        appendText(
+          `\ncomponent c${getObjectID()} [${coords[1]}, ${coords[0]}]`
+        );
       }
     });
+  }
+
+  wardleyToRendererCoords(x: number, y: number) {
+    return [
+      (x * this.renderer.width) / this.renderer.resolution,
+      ((1 - y) * this.renderer.height) / this.renderer.resolution,
+    ];
+  }
+
+  rendererToWardleyCoords(x: number, y: number) {
+    return [
+      ((1 / this.renderer.width) * this.renderer.resolution * x).toFixed(3),
+      (1 - (1 / this.renderer.height) * this.renderer.resolution * y).toFixed(
+        3
+      ),
+    ];
   }
 }
 

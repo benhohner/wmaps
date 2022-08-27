@@ -2,6 +2,7 @@ import * as monaco from "monaco-editor";
 import debounce from "lodash/debounce";
 
 import { updateEditorText } from "../state/State";
+import AppSingleton from "../render/components/AppSingleton";
 import { truncate } from "lodash";
 
 monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
@@ -26,6 +27,48 @@ export const editor = monaco.editor.create(document.getElementById("editor")!, {
   automaticLayout: true,
 });
 
+export const appendText = (text: string) => {
+  const lineCount = editor.getModel()!.getLineCount();
+  const lastLineLength = editor.getModel()!.getLineMaxColumn(lineCount);
+
+  const range = new monaco.Range(
+    lineCount,
+    lastLineLength,
+    lineCount,
+    lastLineLength
+  );
+
+  editor.executeEdits("", [{ range, text }]);
+  editor.pushUndoStop();
+};
+
+export const replaceCoordinates = (
+  componentName: string,
+  x: number,
+  y: number
+) => {
+  const matches = editor
+    .getModel()!
+    .findMatches(
+      `.*component[ ]+${componentName}.*`,
+      true,
+      true,
+      false,
+      null,
+      true
+    );
+
+  var coords = AppSingleton.rendererToWardleyCoords(x, y);
+  editor.executeEdits("", [
+    {
+      range: matches[0].range,
+      text: `component ${componentName} [${coords[1]}, ${coords[0]}]`,
+    },
+  ]);
+  editor.pushUndoStop();
+  console.log(matches);
+};
+
 // Save editor state to browser storage before navigating away
 window.addEventListener("beforeunload", function (e) {
   localStorage.setItem("editorText", editor.getValue());
@@ -33,7 +76,7 @@ window.addEventListener("beforeunload", function (e) {
 
 const handleEditorChange = debounce(() => {
   updateEditorText(editor.getValue());
-}, 300);
+}, 32);
 
 editor.getModel()!.onDidChangeContent((event) => {
   handleEditorChange();

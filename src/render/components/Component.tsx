@@ -1,14 +1,21 @@
-import { Graphics, Point, BitmapText } from "pixi.js";
+import { Graphics, Point, BitmapText, InteractionEvent } from "pixi.js";
 
 import KeyPressure from "../utilities/KeyPressure";
-import { setDraggable, ObjectUpdateStrategy } from "../utilities/Draggable";
+import {
+  setDraggable,
+  ObjectUpdateStrategy,
+  OnDragEndCallback,
+  DragObject,
+} from "../utilities/Draggable";
 
 import { ComponentT } from "./types";
 
 import { state, setLineTargetA } from "../../state/State";
 
 import { addEdge, updateComponentPosition } from "../../state/Graph";
+import { appendText, replaceCoordinates } from "../../editor/Editor";
 import AppSingleton from "./AppSingleton";
+
 const BaseComponent = new Graphics()
   .lineStyle(0)
   .beginFill(0x000000, 1)
@@ -20,6 +27,21 @@ const BaseComponent = new Graphics()
 
 const graphUpdateStrategy: ObjectUpdateStrategy = (obj, x, y) => {
   updateComponentPosition(obj.nodeKey, x, y);
+};
+
+const onDragEnd: OnDragEndCallback = (e) => {
+  const obj = e.currentTarget as DragObject;
+
+  const data = obj.dragData; // it can be different pointer!
+  if (!data) return;
+
+  const dragPointerEnd = data.getLocalPosition(obj.parent);
+
+  replaceCoordinates(
+    obj.nodeKey,
+    obj.dragObjStart.x + (dragPointerEnd.x - obj.dragPointerStart.x),
+    obj.dragObjStart.y + (dragPointerEnd.y - obj.dragPointerStart.y)
+  );
 };
 
 export const Component = (
@@ -45,7 +67,7 @@ export const Component = (
 
   g.addChild(text);
 
-  setDraggable(g, undefined, undefined, undefined, graphUpdateStrategy);
+  setDraggable(g, undefined, undefined, onDragEnd, graphUpdateStrategy);
 
   const keydownListenerID = kp.addKeydownListener(17, () => {
     g.clear();
@@ -82,7 +104,9 @@ export const Component = (
         state.interact.lineTargetA.id !== e.target.id
       ) {
         // ^ If not trying to link a component to itself
-        addEdge(state.interact.lineTargetA.nodeKey, e.target.nodeKey);
+        appendText(
+          `\n${state.interact.lineTargetA.nodeKey}->${e.target.nodeKey}`
+        );
       }
     }
     // Reset if clicking self component or not holding control
