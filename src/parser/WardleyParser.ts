@@ -16,6 +16,7 @@ export function WardleyScript() {
     line_breaks: true,
   });
 
+  // TODO: string literal starting with a number matches numberliteral, need to do lookahead
   const StringLiteral = createToken({
     name: "StringLiteral",
     pattern: /[a-zA-Z0-9_\/\+:]+([ -]+[a-zA-Z0-9_\/\+:]+)*/,

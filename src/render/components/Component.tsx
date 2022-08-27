@@ -8,6 +8,7 @@ import { ComponentT } from "./types";
 import { state, setLineTargetA } from "../../state/State";
 
 import { addEdge, updateComponentPosition } from "../../state/Graph";
+import AppSingleton from "./AppSingleton";
 const BaseComponent = new Graphics()
   .lineStyle(0)
   .beginFill(0x000000, 1)
@@ -27,6 +28,7 @@ export const Component = (
   id: number,
   nodeKey: string
 ) => {
+  let kp = KeyPressure;
   let g = BaseComponent.clone() as ComponentT;
 
   g.id = id;
@@ -45,7 +47,7 @@ export const Component = (
 
   setDraggable(g, undefined, undefined, undefined, graphUpdateStrategy);
 
-  const keydownListenerID = KeyPressure.addKeydownListener(17, () => {
+  const keydownListenerID = kp.addKeydownListener(17, () => {
     g.clear();
     g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
     g.beginFill(0x0f30a0, 1);
@@ -54,9 +56,10 @@ export const Component = (
     g.beginFill(0xffffff, 1);
     g.drawCircle(0, 0, 6);
     g.endFill();
+    AppSingleton.dirty = true;
   });
 
-  const keyupListenerID = KeyPressure.addKeyupListener(17, () => {
+  const keyupListenerID = kp.addKeyupListener(17, () => {
     g.clear();
     g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
     g.beginFill(0x000000, 1);
@@ -65,11 +68,12 @@ export const Component = (
     g.beginFill(0xffffff, 1);
     g.drawCircle(0, 0, 6);
     g.endFill();
+    AppSingleton.dirty = true;
   });
 
   g.on("pointerdown", (e) => {
     // If ctrl pressed
-    if (KeyPressure.keys[17]) {
+    if (kp.keys[17]) {
       if (!state.interact.lineTargetA) {
         setLineTargetA(e.target);
         return;
@@ -86,8 +90,8 @@ export const Component = (
   });
 
   g.on("removed", () => {
-    KeyPressure.removeKeyupListener(keyupListenerID);
-    KeyPressure.removeKeydownListener(keydownListenerID);
+    kp.removeKeyupListener(keyupListenerID);
+    kp.removeKeydownListener(keydownListenerID);
     text.destroy();
     g.destroy();
   });

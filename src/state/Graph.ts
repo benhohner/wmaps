@@ -8,11 +8,7 @@ import { Line } from "../render/components/Line";
 import { ComponentT, LineT } from "../render/components/types";
 
 import { state, subscribe, getObjectID, setLineTargetA } from "./State";
-import {
-  parseInputWithVisitor,
-  BaseWardleyVisitor,
-  parseInputToCST,
-} from "../parser/WardleyParser";
+import { BaseWardleyVisitor, parseInputToCST } from "../parser/WardleyParser";
 
 export type NodeAttributes = {
   type: "component";
@@ -77,6 +73,7 @@ export const addComponent = (
   });
 
   AppSingleton.graphContainer.addChild(component);
+  AppSingleton.dirty = true;
 };
 
 export const updateComponentPosition = (
@@ -90,6 +87,7 @@ export const updateComponentPosition = (
     node.component.position.y = y;
     node.coordinates.x = x;
     node.coordinates.y = y;
+    AppSingleton.dirty = true;
     graph.forEachEdge(nodeKey, updateEdgePosition);
   }
 };
@@ -115,6 +113,7 @@ export const addEdge = (componentAKey: string, componentBKey: string) => {
     );
 
     AppSingleton.graphContainer.addChild(component);
+    AppSingleton.dirty = true;
 
     graph.addEdge(componentA.nodeKey, componentB.nodeKey, {
       id,
@@ -150,48 +149,28 @@ const updateEdgePosition = (
     attributes.coordinates.stop.x,
     attributes.coordinates.stop.y
   );
+  AppSingleton.dirty = true;
 };
 
 // SUBSCRIPTIONS
-// export const rerenderGraph :  = () => {
-//   // Don't keep reference to deleted item
-//   setLineTargetA(undefined);
-
-//   graph.clear();
-
-// state.ast.astArr.forEach((dec) => {
-//   if (dec.type === "componentDeclaration") {
-//     if (dec.coordinates) {
-//       // wardleyscript has coordinates backwards
-//       const y =
-//         ((1 - dec.coordinates[0]) * AppSingleton.renderer.height) /
-//         AppSingleton.renderer.resolution;
-//       const x =
-//         (dec.coordinates[1] * AppSingleton.renderer.width) /
-//         AppSingleton.renderer.resolution;
-
-//       addComponent(x, y, dec.componentName);
-//     } else {
-//       addComponent(20, 20, dec.componentName);
-//     }
-//   }
-// });
-
 export class WardleyVisitorToGraph extends BaseWardleyVisitor {
+  // Local reference to graph for speed
   graph: WardleyGraph;
 
   constructor(graph: WardleyGraph) {
     super();
+
     this.graph = graph;
+
     // The "validateVisitor" method is a helper utility which performs static analysis
     // to detect missing or redundant visitor methods
     this.validateVisitor();
   }
 
-  // TODO: Update to build graph as we go
   /* Visit methods */
   wardley(ctx) {
     if (ctx.declaration) {
+      // Don't keep reference to deleted item
       setLineTargetA(undefined);
 
       graph.clear();
@@ -239,7 +218,7 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
 
       addComponent(x, y, ctx.StringLiteral[0].image);
     } else {
-      addComponent(20, 20, ctx.StringLiteral[0].image);
+      addComponent(40, 40, ctx.StringLiteral[0].image);
     }
   }
 
@@ -256,6 +235,7 @@ export const rerenderGraph = () =>
 // SUBSCRIPTIONS
 subscribe(state.editor, () => {
   // TODO: read lazy update checking to see if text makes a different graph than before
+  // Rerendering each time might be faster than diffing graph?
 
   //   if (state.ast.astArr.length !== state.lastAst.astArr.length) {
   //     state.lastAst.astArr = state.ast.astArr;

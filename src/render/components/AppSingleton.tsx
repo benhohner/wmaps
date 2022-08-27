@@ -5,10 +5,14 @@ import throttle from "lodash/throttle";
 
 import { addComponent, rerenderGraph } from "../../state/Graph";
 
+// @ts-ignore
+Application.prototype.render = null; // Disable auto-rendering by removing the function
+
 class AppSingleton extends Application {
   static _instance: AppSingleton;
 
   graphContainer = new Container();
+  dirty: boolean = false;
 
   constructor() {
     if (AppSingleton._instance) {
@@ -25,6 +29,15 @@ class AppSingleton extends Application {
     });
 
     AppSingleton._instance = this;
+
+    //Set up custom renderer
+    this.ticker.add(() => {
+      if (this.dirty) {
+        // Manually render when something has changed
+        this.renderer.render(this.stage);
+        this.dirty = false;
+      }
+    });
 
     // Create a font for usage
     BitmapFont.from(
@@ -44,6 +57,7 @@ class AppSingleton extends Application {
     // Resize container on window resize
     const onResize = throttle(() => {
       this.resize();
+      this.dirty = true;
       rerenderGraph();
     }, 32);
     window.addEventListener("resize", onResize);
@@ -53,7 +67,7 @@ class AppSingleton extends Application {
     this.graphContainer.sortableChildren = true; // make zIndex work
 
     // FPS Monitor
-    this.stage.addChild(new FPSMonitor());
+    // this.stage.addChild(new FPSMonitor());
 
     this.view.addEventListener("mousedown", (e: any) => {
       // Might double click more than once within 200ms

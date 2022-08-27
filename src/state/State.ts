@@ -4,7 +4,6 @@ import { ComponentT } from "../render/components/types";
 
 interface StateT {
   editor: { editorText: string };
-  lastGraph: { lastOrder: 0; lastSize: 0 };
   interact: {
     lineTargetA: ComponentT | undefined;
   };
@@ -12,7 +11,6 @@ interface StateT {
 // STORE
 export const state = proxy<StateT>({
   editor: { editorText: "" },
-  lastGraph: { lastOrder: 0, lastSize: 0 },
   interact: {
     lineTargetA: undefined,
   },

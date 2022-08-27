@@ -10,6 +10,12 @@ monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
   noSuggestionDiagnostics: true,
 });
 
+// monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+//   // Remove autocompletions
+//   noLib: true,
+//   types: undefined
+// });
+
 // EDITOR
 export const editor = monaco.editor.create(document.getElementById("editor")!, {
   value:
