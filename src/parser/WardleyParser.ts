@@ -1,14 +1,21 @@
-import { createToken, Lexer, CstParser, ICstVisitor } from "chevrotain";
+import {
+  createToken,
+  Lexer,
+  CstParser,
+  ICstVisitor,
+  ParserMethod,
+  CstNode,
+} from "chevrotain";
 
 export function WardleyScript() {
   // ----------------- Lexer -----------------
   const Component = createToken({ name: "Component", pattern: /component/ });
   const Inertia = createToken({ name: "Inertia", pattern: /inertia/ });
-  const Edge = createToken({ name: "Edge", pattern: /->/ });
+  const Edge = createToken({ name: "Edge", pattern: /->/, label: "'->'" });
 
-  const LSquare = createToken({ name: "LSquare", pattern: /\[/ });
-  const RSquare = createToken({ name: "RSquare", pattern: /]/ });
-  const Comma = createToken({ name: "Comma", pattern: /,/ });
+  const LSquare = createToken({ name: "LSquare", pattern: /\[/, label: "'['" });
+  const RSquare = createToken({ name: "RSquare", pattern: /]/, label: "']'" });
+  const Comma = createToken({ name: "Comma", pattern: /,/, label: "','" });
 
   const NewLine = createToken({
     name: "NewLine",
@@ -58,22 +65,23 @@ export function WardleyScript() {
     positionTracking: "onlyStart",
   });
 
-  // Labels only affect error messages and Diagrams.
-  LSquare.LABEL = "'['";
-  RSquare.LABEL = "']'";
-  Comma.LABEL = "','";
-  Edge.LABEL = "'->'";
-
   // ----------------- parser -----------------
   class WardleyParser extends CstParser {
+    public wardley!: ParserMethod<[], CstNode>;
+    private declaration!: ParserMethod<[], CstNode>;
+    private edgeDeclaration!: ParserMethod<[], CstNode>;
+    private componentDeclaration!: ParserMethod<[], CstNode>;
+    private coordinates!: ParserMethod<[], CstNode>;
+
     constructor() {
       super(wardleyTokens, {
         recoveryEnabled: false,
       });
 
+      // shorthand for easier writing and comprehension
       const $ = this;
 
-      $.RULE("wardley", () => {
+      $.wardley = $.RULE("wardley", () => {
         $.MANY(() => {
           $.OR([
             { ALT: () => $.SUBRULE($.declaration) },
@@ -83,15 +91,14 @@ export function WardleyScript() {
         });
       });
 
-      $.RULE("declaration", () => {
+      $.declaration = $.RULE("declaration", () => {
         $.OR([
           { ALT: () => $.SUBRULE($.componentDeclaration) },
           { ALT: () => $.SUBRULE($.edgeDeclaration) },
         ]);
         $.OPTION(() => $.CONSUME(WhiteSpace));
       });
-
-      $.RULE("edgeDeclaration", () => {
+      $.edgeDeclaration = $.RULE("edgeDeclaration", () => {
         $.CONSUME(StringLiteral, { LABEL: "LHS" });
         $.OPTION(() => $.CONSUME(WhiteSpace));
         $.CONSUME(Edge);
@@ -99,7 +106,7 @@ export function WardleyScript() {
         $.CONSUME1(StringLiteral, { LABEL: "RHS" });
       });
 
-      $.RULE("componentDeclaration", () => {
+      $.componentDeclaration = $.RULE("componentDeclaration", () => {
         $.CONSUME(Component);
         $.CONSUME(WhiteSpace);
         $.CONSUME(StringLiteral);
@@ -107,7 +114,7 @@ export function WardleyScript() {
         $.OPTION1(() => $.SUBRULE($.coordinates));
       });
 
-      $.RULE("coordinates", () => {
+      $.coordinates = $.RULE("coordinates", () => {
         $.CONSUME(LSquare);
         $.OPTION(() => $.CONSUME(WhiteSpace));
         $.CONSUME(NumberLiteral, { LABEL: "LHS" });
@@ -118,7 +125,6 @@ export function WardleyScript() {
         $.OPTION3(() => $.CONSUME3(WhiteSpace));
         $.CONSUME(RSquare);
       });
-
       // very important to call this after all the rules have been setup.
       // otherwise the parser may not work correctly as it will lack information
       // derived from the self analysis.
@@ -149,15 +155,15 @@ class WardleyVisitorToAST extends BaseWardleyVisitor {
     this.validateVisitor();
   }
   /* Visit methods */
-  wardley(ctx) {
+  wardley(ctx: any) {
     if (ctx.declaration) {
-      return ctx.declaration.map((dec) => this.visit(dec));
+      return ctx.declaration.map((dec: any) => this.visit(dec));
     } else {
       return [];
     }
   }
 
-  declaration(ctx) {
+  declaration(ctx: any) {
     let dec = undefined;
     if (ctx.componentDeclaration) {
       dec = this.visit(ctx.componentDeclaration[0]);
@@ -167,7 +173,7 @@ class WardleyVisitorToAST extends BaseWardleyVisitor {
     return dec;
   }
 
-  edgeDeclaration(ctx) {
+  edgeDeclaration(ctx: any) {
     return {
       type: "edgeDeclaration",
       lhs: ctx.LHS[0].image,
@@ -175,7 +181,7 @@ class WardleyVisitorToAST extends BaseWardleyVisitor {
     };
   }
 
-  componentDeclaration(ctx) {
+  componentDeclaration(ctx: any) {
     let coordinates = undefined;
     if (ctx.coordinates) {
       coordinates = this.visit(ctx.coordinates[0]);
@@ -187,7 +193,7 @@ class WardleyVisitorToAST extends BaseWardleyVisitor {
     };
   }
 
-  coordinates(ctx) {
+  coordinates(ctx: any) {
     return [Number(ctx.LHS[0].image), Number(ctx.RHS[0].image)];
   }
 }
