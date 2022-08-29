@@ -1,4 +1,4 @@
-import { Application, Container, BitmapFont } from "pixi.js";
+import { Application, Container, BitmapFont, Point } from "pixi.js";
 import { FPSMonitor } from "../utilities/FPSMonitor";
 
 import { appendText } from "../../editor/Editor";
@@ -60,7 +60,14 @@ class AppSingleton extends Application {
     // FPS Monitor
     // this.stage.addChild(new FPSMonitor());
 
-    this.view.addEventListener("mousedown", (e: any) => {
+    this.view.addEventListener("mousedown", (e: MouseEvent) => {
+      // TODO: Use me to get rid of endless listeners components?
+      // console.log(
+      //   this.renderer.plugins.interaction.hitTest(
+      //     new Point(e.offsetX, e.offsetY)
+      //     )
+      // );
+
       // Might double click more than once within 200ms
       if (e.detail % 2 === 0) {
         const coords = this.rendererToWardleyCoords(e.offsetX, e.offsetY);

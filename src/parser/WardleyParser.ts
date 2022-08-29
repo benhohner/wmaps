@@ -230,7 +230,13 @@ export function parseInput(text: string) {
   const cst = parserInstance.wardley();
 
   if (parserInstance.errors.length > 0) {
-    throw Error("Parsing errors detected\n" + parserInstance.errors[0].message);
+    const err = parserInstance.errors[0];
+
+    throw Error(
+      `Error: ${err.name} at line ${err.token.startLine} col ${
+        err.token.startColumn
+      }\n${err.stack!}`
+    );
   }
 
   const visitorInstance = new WardleyVisitorToAST();
@@ -244,7 +250,13 @@ export function parseInputToCST(text: string) {
   const cst = parserInstance.wardley();
 
   if (parserInstance.errors.length > 0) {
-    throw Error("Parsing errors detected\n" + parserInstance.errors[0].message);
+    const err = parserInstance.errors[0];
+
+    throw Error(
+      `Error: ${err.name} at line ${err.token.startLine} col ${
+        err.token.startColumn
+      }\n${err.stack!}`
+    );
   }
 
   return cst;

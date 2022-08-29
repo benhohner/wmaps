@@ -93,8 +93,30 @@ export const updateComponentPosition = (
 };
 
 export const addEdge = (componentAKey: string, componentBKey: string) => {
-  const componentA = graph.getNodeAttributes(componentAKey);
-  const componentB = graph.getNodeAttributes(componentBKey);
+  let componentA: NodeAttributes | undefined;
+  let componentB: NodeAttributes | undefined;
+
+  try {
+    componentA = graph.getNodeAttributes(componentAKey);
+  } catch (error) {
+    console.log(graph.nodes());
+
+    console.error(
+      `Node ${componentAKey} not found. Check to make sure it's declared in the graph.\n${error}`
+    );
+  }
+  try {
+    componentB = graph.getNodeAttributes(componentBKey);
+  } catch (error) {
+    console.log(graph.nodes());
+    console.error(
+      `Node ${componentBKey} not found. Check to make sure it's declared in the graph.\n${error}`
+    );
+  }
+
+  if (!(componentA || componentB)) {
+    return;
+  }
 
   if (componentA?.mounted && componentB?.mounted) {
     const componentAx = componentA.coordinates.x;
