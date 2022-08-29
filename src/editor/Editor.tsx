@@ -1,9 +1,15 @@
+import * as Y from "yjs";
 import * as monaco from "monaco-editor";
+import { WebrtcProvider } from "y-webrtc";
+import { MonacoBinding } from "y-monaco";
 import debounce from "lodash/debounce";
 
 import { updateEditorText } from "../state/State";
 import AppSingleton from "../render/components/AppSingleton";
-import { truncate } from "lodash";
+
+const ydoc = new Y.Doc();
+const provider = new WebrtcProvider("monaco", ydoc);
+const type = ydoc.getText("monaco");
 
 monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
   noSyntaxValidation: true,
@@ -34,6 +40,13 @@ export const editor = monaco.editor.create(document.getElementById("editor")!, {
   },
   wordWrap: "bounded",
 });
+
+const monacoBinding = new MonacoBinding(
+  type,
+  editor.getModel()!,
+  new Set([editor]),
+  provider.awareness
+);
 
 export const appendText = (text: string) => {
   const lineCount = editor.getModel()!.getLineCount();
