@@ -58,7 +58,7 @@ export const replaceCoordinates = (
   const matches = editor
     .getModel()!
     .findMatches(
-      `.*component[ ]+${componentName}.*`,
+      `[ \t]*component[ \t]+${componentName}([^\/]*)`,
       true,
       true,
       false,
@@ -66,15 +66,23 @@ export const replaceCoordinates = (
       true
     );
 
+  if (matches.length < 1) {
+    throw new Error(
+      `Error: "${componentName}" not found in text document. State sync lost or regex error.`
+    );
+  }
+
   var coords = AppSingleton.rendererToWardleyCoords(x, y);
+
   editor.executeEdits("", [
     {
       range: matches[0].range,
-      text: `component ${componentName} [${coords[1]}, ${coords[0]}]`,
+      text: `component ${componentName} [${coords[1]}, ${coords[0]}]${
+        matches[0].matches!.length > 1 ? " " : ""
+      }`,
     },
   ]);
   editor.pushUndoStop();
-  console.log(matches);
 };
 
 // Save editor state to browser storage before navigating away

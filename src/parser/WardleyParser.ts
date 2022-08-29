@@ -12,6 +12,11 @@ export function WardleyScript() {
   const Component = createToken({ name: "Component", pattern: /component/ });
   const Inertia = createToken({ name: "Inertia", pattern: /inertia/ });
   const Edge = createToken({ name: "Edge", pattern: /->/, label: "'->'" });
+  const Comment = createToken({
+    name: "Comment",
+    pattern: /\/\/[^\n\r]*/,
+    group: Lexer.SKIPPED,
+  });
 
   const LSquare = createToken({ name: "LSquare", pattern: /\[/, label: "'['" });
   const RSquare = createToken({ name: "RSquare", pattern: /]/, label: "']'" });
@@ -26,7 +31,7 @@ export function WardleyScript() {
   // TODO: string literal starting with a number matches numberliteral, need to do lookahead
   const StringLiteral = createToken({
     name: "StringLiteral",
-    pattern: /[a-zA-Z0-9_\/\+:]+([ -]+[a-zA-Z0-9_\/\+:]+)*/,
+    pattern: /[a-zA-Z0-9_\+:]+([ -]+[a-zA-Z0-9_\+:]+)*/,
   });
 
   const NumberLiteral = createToken({
@@ -53,6 +58,7 @@ export function WardleyScript() {
     LSquare,
     RSquare,
     Comma,
+    Comment,
     NumberLiteral,
     StringLiteral,
     NewLine,
@@ -84,6 +90,7 @@ export function WardleyScript() {
       $.wardley = $.RULE("wardley", () => {
         $.MANY(() => {
           $.OR([
+            { ALT: () => $.CONSUME(Comment) },
             { ALT: () => $.SUBRULE($.declaration) },
             { ALT: () => $.CONSUME(NewLine) },
             { ALT: () => $.CONSUME(WhiteSpace) },

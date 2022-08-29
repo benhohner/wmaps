@@ -44,11 +44,11 @@ const onDragEnd: OnDragEndCallback = (e) => {
     obj.dragObjStart.y !==
       obj.dragObjStart.y + (dragPointerEnd.y - obj.dragPointerStart.y)
   ) {
-  replaceCoordinates(
-    obj.nodeKey,
-    obj.dragObjStart.x + (dragPointerEnd.x - obj.dragPointerStart.x),
-    obj.dragObjStart.y + (dragPointerEnd.y - obj.dragPointerStart.y)
-  );
+    replaceCoordinates(
+      obj.nodeKey,
+      obj.dragObjStart.x + (dragPointerEnd.x - obj.dragPointerStart.x),
+      obj.dragObjStart.y + (dragPointerEnd.y - obj.dragPointerStart.y)
+    );
   }
 };
 
