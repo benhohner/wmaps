@@ -175,12 +175,19 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
 
       graph.clear();
 
+      const edgeDecs: any = [];
+
       ctx.declaration.forEach((dec: any) => {
         const edgeDec = this.visit(dec);
 
         if (edgeDec) {
-          addEdge(edgeDec.lhs, edgeDec.rhs);
+          edgeDecs.push(edgeDec);
         }
+      });
+
+      // render edges last to allow edges to be declared before components
+      edgeDecs.forEach((edgeDec: any) => {
+        addEdge(edgeDec.lhs, edgeDec.rhs);
       });
     }
   }
@@ -188,7 +195,7 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
   declaration(ctx: any) {
     if (ctx.componentDeclaration) {
       this.visit(ctx.componentDeclaration[0]);
-      return false;
+      return;
     } else if (ctx.edgeDeclaration) {
       // we only return edgeDecs because they need to be created last
       // so pass them to the top level function which will run last
