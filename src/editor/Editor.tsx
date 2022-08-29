@@ -23,8 +23,16 @@ export const editor = monaco.editor.create(document.getElementById("editor")!, {
     localStorage.getItem("editorText") ||
     "component client [0.99, 0.45]\ncomponent wellbeing [0.91, 0.67]\ncomponent emotional expression [0.69, 0.25] \ncomponent healthy belief systems [0.69, 0.68] \ncomponent habits [0.47, 0.56] \ncomponent exercise [0.29, 0.53]\ncomponent diet [0.31, 0.63]\ncomponent self care [0.27, 0.41]\nclient->wellbeing\nwellbeing->emotional expression\nwellbeing->healthy belief systems\nwellbeing->habits\nhabits->diet\nhabits->exercise\nhabits->self care",
   language: "typescript",
-  theme: "vs-dark",
+  theme: "vs",
   automaticLayout: true,
+  lineNumbersMinChars: 4,
+  renderLineHighlightOnlyWhenFocus: true,
+  minimap: { enabled: false },
+  bracketPairColorization: {
+    enabled: true,
+    independentColorPoolPerBracketType: true,
+  },
+  wordWrap: "bounded",
 });
 
 export const appendText = (text: string) => {

@@ -1,9 +1,6 @@
 import { Application, Container, BitmapFont } from "pixi.js";
 import { FPSMonitor } from "../utilities/FPSMonitor";
 
-import throttle from "lodash/throttle";
-
-import { rerenderGraph } from "../../state/Graph";
 import { appendText } from "../../editor/Editor";
 import { getObjectID } from "../../state/State";
 
@@ -55,14 +52,6 @@ class AppSingleton extends Application {
           "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~1234567890!@#$%^&*-=_+()[]{}<>,./;':\"\\| ",
       }
     );
-
-    // Resize container on window resize
-    const onResize = throttle(() => {
-      this.resize();
-      this.dirty = true;
-      rerenderGraph();
-    }, 32);
-    window.addEventListener("resize", onResize);
 
     // A container to hold all components, lines, text
     this.stage.addChild(this.graphContainer);

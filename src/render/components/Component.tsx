@@ -12,7 +12,7 @@ import { ComponentT } from "./types";
 
 import { state, setLineTargetA } from "../../state/State";
 
-import { addEdge, updateComponentPosition } from "../../state/Graph";
+import { updateComponentPosition } from "../../state/Graph";
 import { appendText, replaceCoordinates } from "../../editor/Editor";
 import AppSingleton from "./AppSingleton";
 
@@ -32,16 +32,24 @@ const graphUpdateStrategy: ObjectUpdateStrategy = (obj, x, y) => {
 const onDragEnd: OnDragEndCallback = (e) => {
   const obj = e.currentTarget as DragObject;
 
-  const data = obj.dragData; // it can be different pointer!
+  const data = obj.dragData;
   if (!data) return;
 
   const dragPointerEnd = data.getLocalPosition(obj.parent);
 
+  // Only update if actually moved
+  if (
+    obj.dragObjStart.x !==
+      obj.dragObjStart.x + (dragPointerEnd.x - obj.dragPointerStart.x) ||
+    obj.dragObjStart.y !==
+      obj.dragObjStart.y + (dragPointerEnd.y - obj.dragPointerStart.y)
+  ) {
   replaceCoordinates(
     obj.nodeKey,
     obj.dragObjStart.x + (dragPointerEnd.x - obj.dragPointerStart.x),
     obj.dragObjStart.y + (dragPointerEnd.y - obj.dragPointerStart.y)
   );
+  }
 };
 
 export const Component = (
