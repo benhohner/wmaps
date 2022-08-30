@@ -6,6 +6,7 @@ import debounce from "lodash/debounce";
 
 import { updateEditorText } from "../state/State";
 import AppSingleton from "../render/components/AppSingleton";
+import { Object } from "lodash";
 
 const ydoc = new Y.Doc();
 const provider = new WebrtcProvider("wardley", ydoc, {
@@ -47,6 +48,10 @@ export const editor = monaco.editor.create(document.getElementById("editor")!, {
   },
   wordWrap: "bounded",
 });
+
+const newModel = monaco.editor.createModel("", "typescript");
+newModel.setEOL(0);
+editor.setModel(newModel);
 
 const monacoBinding = new MonacoBinding(
   type,
