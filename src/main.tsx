@@ -53,7 +53,7 @@ function resize(event: MouseEvent) {
 }
 
 document!.addEventListener(
-  "mousedown",
+  "pointerdown",
   function (event) {
     const resizeBounds = resizeDiv!.getBoundingClientRect();
 
@@ -63,14 +63,14 @@ document!.addEventListener(
     ) {
       initialMouseX = event.x;
       lastMouseX = initialMouseX;
-      document.addEventListener("mousemove", resize, false);
+      document.addEventListener("pointermove", resize, false);
     }
   },
   false
 );
 
 document.addEventListener(
-  "mouseup",
+  "pointerup",
   function (event: MouseEvent) {
     if (wasResizing) {
       if (panel!.clientWidth < 41) {
@@ -97,9 +97,7 @@ document.addEventListener(
         onResize();
       }
     }
-    console.log(initialMouseX, event.x, lastPanelWidth, collapsed);
-
-    document.removeEventListener("mousemove", resize, false);
+    document.removeEventListener("pointermove", resize, false);
   },
   false
 );
