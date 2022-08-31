@@ -73,5 +73,6 @@ body {
   height: 100vh;
 }
 .cm-scroller {
-  overflow: auto;
+  overflow-y: hidden;
+  overflow-x: auto;
 }

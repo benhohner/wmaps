@@ -9,6 +9,7 @@ import react from "@vitejs/plugin-react";
 const testConfig = dc({
   test: {
     api: 5173,
+    environment: "happy-dom",
   },
 });
 
