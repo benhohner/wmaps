@@ -1,14 +1,40 @@
 import * as Y from "yjs";
-import * as monaco from "monaco-editor";
+// @ts-ignore because no typings
+import { yCollab } from "y-codemirror.next";
 import { WebrtcProvider } from "y-webrtc";
-import { MonacoBinding } from "y-monaco";
+
+import { EditorState } from "@codemirror/state";
+import { basicSetup, EditorView } from "codemirror";
+import { keymap } from "@codemirror/view";
+import { RegExpCursor } from "@codemirror/search";
+
+// @ts-ignore because no typings
+import { vscodeKeymap } from "@replit/codemirror-vscode-keymap";
+
 import debounce from "lodash/debounce";
 
-import { updateEditorText } from "../state/State";
+import { setEditorText } from "../state/State";
 import AppSingleton from "../render/components/AppSingleton";
-import { Object } from "lodash";
+
+export const usercolors = [
+  { color: "#30bced", light: "#30bced33" },
+  { color: "#6eeb83", light: "#6eeb8333" },
+  { color: "#ffbc42", light: "#ffbc4233" },
+  { color: "#ecd444", light: "#ecd44433" },
+  { color: "#ee6352", light: "#ee635233" },
+  { color: "#9ac2c9", light: "#9ac2c933" },
+  { color: "#8acb88", light: "#8acb8833" },
+  { color: "#1be7ff", light: "#1be7ff33" },
+];
+
+export const userColor =
+  usercolors[Math.floor(Math.random() * usercolors.length)];
 
 const ydoc = new Y.Doc();
+const ytext = ydoc.getText("wardleytext");
+const undoManager = new Y.UndoManager(ytext);
+
+// @ts-ignore because Typing error in WebrtcProvider
 const provider = new WebrtcProvider("wardley", ydoc, {
   password: "isnh388u3unhuie",
   signaling: [
@@ -17,70 +43,44 @@ const provider = new WebrtcProvider("wardley", ydoc, {
     "wss://y-webrtc-signaling-eu.herokuapp.com",
   ],
 });
-const type = ydoc.getText("wardley");
 
-monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-  noSyntaxValidation: true,
-  noSemanticValidation: true,
-  noSuggestionDiagnostics: true,
+provider.awareness.setLocalStateField("user", {
+  name: "Anonymous " + Math.floor(Math.random() * 1000),
+  color: userColor.color,
+  colorLight: userColor.light,
 });
 
-// monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-//   // Remove autocompletions
-//   noLib: true,
-//   types: undefined
-// });
-
-// EDITOR
-export const editor = monaco.editor.create(document.getElementById("editor")!, {
-  value:
-    // localStorage.getItem("editorText") ||
-    "component client [0.99, 0.45]\ncomponent wellbeing [0.91, 0.67]\ncomponent emotional expression [0.69, 0.25] \ncomponent healthy belief systems [0.69, 0.68] \ncomponent habits [0.47, 0.56] \ncomponent exercise [0.29, 0.53]\ncomponent diet [0.31, 0.63]\ncomponent self care [0.27, 0.41]\nclient->wellbeing\nwellbeing->emotional expression\nwellbeing->healthy belief systems\nwellbeing->habits\nhabits->diet\nhabits->exercise\nhabits->self care",
-  language: "typescript",
-  theme: "vs",
-  automaticLayout: true,
-  lineNumbersMinChars: 4,
-  renderLineHighlightOnlyWhenFocus: true,
-  minimap: { enabled: false },
-  bracketPairColorization: {
-    enabled: true,
-    independentColorPoolPerBracketType: true,
-  },
-  wordWrap: "bounded",
+const startState = EditorState.create({
+  doc: ytext.toString(),
+  extensions: [
+    keymap.of(vscodeKeymap),
+    basicSetup,
+    EditorView.lineWrapping,
+    yCollab(ytext, provider.awareness, { undoManager }),
+    EditorView.updateListener.of((e) => {
+      if (e.docChanged) {
+        console.log(e);
+        handleEditorChange(e.state.doc.toString());
+      }
+    }),
+  ],
 });
 
-const newModel = monaco.editor.createModel("", "typescript");
-newModel.setEOL(0);
-editor.setModel(newModel);
-
-const monacoBinding = new MonacoBinding(
-  type,
-  editor.getModel()!,
-  new Set([editor]),
-  provider.awareness
-);
-
-provider.on("synced", (synced: any) => {
-  // NOTE: This is only called when a different browser connects to this client
-  // Windows of the same browser communicate directly with each other
-  // Although this behavior might be subject to change.
-  // It is better not to expect a synced event when using y-webrtc
-  console.log("synced!", synced);
+export const editorView = new EditorView({
+  state: startState,
+  parent: document.getElementById("editor")!,
 });
 
 export const appendText = (text: string) => {
-  const lineCount = editor.getModel()!.getLineCount();
-  const lastLineLength = editor.getModel()!.getLineMaxColumn(lineCount);
-
-  const range = new monaco.Range(
-    lineCount,
-    lastLineLength,
-    lineCount,
-    lastLineLength
-  );
-
-  editor.executeEdits("", [{ range, text }]);
-  editor.pushUndoStop();
+  editorView.dispatch({
+    changes: {
+      from: editorView.state.doc.length,
+      insert: text,
+    },
+    selection: {
+      anchor: editorView.state.doc.length + text.length,
+    },
+  });
 };
 
 export const replaceCoordinates = (
@@ -88,45 +88,42 @@ export const replaceCoordinates = (
   x: number,
   y: number
 ) => {
-  const matches = editor
-    .getModel()!
-    .findMatches(
-      `[ \t]*component[ \t]+${componentName}([^\/]*)`,
-      true,
-      true,
-      false,
-      null,
-      true
-    );
+  const searchCursor = new RegExpCursor(
+    editorView.state.doc,
+    `[ \t]*component[ \t]+${componentName}([^\r\n/]*)`
+  );
 
-  if (matches.length < 1) {
+  let changes = [];
+  var coords = AppSingleton.rendererToWardleyCoords(x, y);
+  for (const next of searchCursor) {
+    console.log(next);
+
+    changes.push({
+      from: next.from,
+      to: next.to,
+      insert: `component ${componentName} [${coords[1]}, ${coords[0]}]${
+        next.match[1] ? " " : ""
+      }`,
+    });
+  }
+
+  if (!changes) {
     throw new Error(
       `Error: "${componentName}" not found in text document. State sync lost or regex error.`
     );
   }
 
-  var coords = AppSingleton.rendererToWardleyCoords(x, y);
-
-  editor.executeEdits("", [
-    {
-      range: matches[0].range,
-      text: `component ${componentName} [${coords[1]}, ${coords[0]}]${
-        matches[0].matches!.length > 1 ? " " : ""
-      }`,
-    },
-  ]);
-  editor.pushUndoStop();
+  editorView.dispatch({
+    changes,
+    selection: { anchor: changes[changes.length - 1].to },
+  });
 };
 
 // Save editor state to browser storage before navigating away
 window.addEventListener("beforeunload", function (e) {
-  localStorage.setItem("editorText", editor.getValue());
+  localStorage.setItem("editorText", editorView.state.doc.toString());
 });
 
-const handleEditorChange = debounce(() => {
-  updateEditorText(editor.getValue());
+const handleEditorChange = debounce((text: string) => {
+  setEditorText(text);
 }, 32);
-
-editor.getModel()!.onDidChangeContent((event) => {
-  handleEditorChange();
-});

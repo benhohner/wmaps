@@ -19,7 +19,7 @@ export const state = proxy<StateT>({
 let objectID = 0;
 
 // ACTIONS
-export const updateEditorText = (text: string) => {
+export const setEditorText = (text: string) => {
   state.editor.editorText = text;
 };
 

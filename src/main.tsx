@@ -2,9 +2,9 @@ import throttle from "lodash/throttle";
 
 import AppSingleton from "./render/components/AppSingleton";
 
-import { editor } from "./editor/Editor";
+import { editorView } from "./editor/Editor";
 import { rerenderGraph } from "./state/Graph";
-import { updateEditorText } from "./state/State";
+import { setEditorText } from "./state/State";
 
 import "./index.css";
 
@@ -112,11 +112,14 @@ const onResize = throttle(() => {
 window.addEventListener("resize", onResize);
 
 const run = (elementId: string) => {
-  updateEditorText(editor.getValue());
+  setEditorText(editorView.state.doc.toString());
 
   // Bind app view to root html element
   document.getElementById(elementId)?.appendChild(AppSingleton.view);
   onResize();
+
+  // Render once even if graph is empty
+  AppSingleton.dirty = true;
 };
 
 run("app");
