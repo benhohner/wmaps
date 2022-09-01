@@ -10,9 +10,9 @@ import {
 
 import { ComponentT } from "./types";
 
-import { state, setLineTargetA } from "../../state/State";
+import { state, setLineTargetA, subscribe } from "../../state/State";
 
-import { updateComponentPosition } from "../../state/Graph";
+import { graph, updateComponentPosition } from "../../state/Graph";
 import { appendText, replaceCoordinates } from "../../editor/Editor";
 import AppSingleton from "./AppSingleton";
 
@@ -59,7 +59,16 @@ export const Component = (
   nodeKey: string
 ) => {
   let kp = KeyPressure;
-  let g = BaseComponent.clone() as ComponentT;
+
+  // TODO: perf: create base graphics for all states, then swap them
+  let g = new Graphics()
+    .lineStyle(0)
+    .beginFill(0x000000, 1)
+    .drawCircle(0, 0, 7)
+    .endFill()
+    .beginFill(0xffffff, 1)
+    .drawCircle(0, 0, 6)
+    .endFill() as ComponentT;
 
   g.id = id;
   g.nodeKey = nodeKey;
@@ -77,10 +86,40 @@ export const Component = (
 
   setDraggable(g, undefined, undefined, onDragEnd, graphUpdateStrategy);
 
+  // TODO: Add isControl to state and remove the keydown and keyup listeners
+  // Should fix bug where highlights disappear on rerender because event listeners destroyed and recreated
+  const unsubscribe = subscribe(state.interact, () => {
+    if (state.interact.lineTargetA?.nodeKey === nodeKey) {
+      g.clear();
+      g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
+      g.beginFill(0x00ff00, 1);
+      g.drawCircle(0, 0, 8);
+      g.endFill();
+      g.beginFill(0xffffff, 1);
+      g.drawCircle(0, 0, 6);
+      g.endFill();
+      AppSingleton.dirty = true;
+    } else {
+      g.clear();
+      g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
+      g.beginFill(0x0f30a0, 1);
+      g.drawCircle(0, 0, 8);
+      g.endFill();
+      g.beginFill(0xffffff, 1);
+      g.drawCircle(0, 0, 6);
+      g.endFill();
+      AppSingleton.dirty = true;
+    }
+  });
+
   const keydownListenerID = kp.addKeydownListener(17, () => {
     g.clear();
     g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
-    g.beginFill(0x0f30a0, 1);
+    if (state.interact.lineTargetA?.nodeKey === nodeKey) {
+      g.beginFill(0x00ff00, 1);
+    } else {
+      g.beginFill(0x0f30a0, 1);
+    }
     g.drawCircle(0, 0, 8);
     g.endFill();
     g.beginFill(0xffffff, 1);
@@ -112,9 +151,12 @@ export const Component = (
         state.interact.lineTargetA.id !== e.target.id
       ) {
         // ^ If not trying to link a component to itself
-        appendText(
-          `\n${state.interact.lineTargetA.nodeKey}->${e.target.nodeKey}`
-        );
+        if (
+          !graph.hasEdge(e.target.nodeKey, state.interact.lineTargetA.nodeKey)
+        )
+          appendText(
+            `\n${state.interact.lineTargetA.nodeKey}->${e.target.nodeKey}`
+          );
       }
     }
     // Reset if clicking self component or not holding control
@@ -122,6 +164,7 @@ export const Component = (
   });
 
   g.on("removed", () => {
+    unsubscribe();
     kp.removeKeyupListener(keyupListenerID);
     kp.removeKeydownListener(keydownListenerID);
     text.destroy();

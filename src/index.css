@@ -5,6 +5,11 @@ body {
   flex-direction: row;
 }
 
+body,
+input {
+  font-family: "JetBrains Mono", "Consolas", "Courier New", monospace;
+}
+
 #editorContainer,
 #app {
   margin: 0;
@@ -61,7 +66,7 @@ body {
     black 1px,
     transparent 1px
   );
-  background-offset: 1px;
+
   background-size: 3px 3px;
   background-position: top left;
   background-repeat: repeat;
@@ -69,10 +74,22 @@ body {
   width: 6px;
   height: 9px;
 }
+
+.componentInput {
+  border: none;
+  border-radius: 2px;
+  background-color: #e2f2ff;
+  border-bottom: 2px solid rgb(30, 73, 142);
+}
+
+.componentInput:focus {
+  outline: none;
+}
+
 .cm-editor {
   height: 100vh;
 }
 .cm-scroller {
-  overflow-y: hidden;
+  overflow-y: scroll;
   overflow-x: auto;
 }

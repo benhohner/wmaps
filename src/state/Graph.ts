@@ -99,8 +99,6 @@ export const addEdge = (componentAKey: string, componentBKey: string) => {
   try {
     componentA = graph.getNodeAttributes(componentAKey);
   } catch (error) {
-    console.log(graph.nodes());
-
     console.error(
       `Node ${componentAKey} not found. Check to make sure it's declared in the graph.\n${error}`
     );
@@ -108,13 +106,17 @@ export const addEdge = (componentAKey: string, componentBKey: string) => {
   try {
     componentB = graph.getNodeAttributes(componentBKey);
   } catch (error) {
-    console.log(graph.nodes());
     console.error(
       `Node ${componentBKey} not found. Check to make sure it's declared in the graph.\n${error}`
     );
   }
 
   if (!(componentA || componentB)) {
+    return;
+  }
+
+  // If reverse edge already exists
+  if (graph.hasEdge(componentBKey, componentAKey)) {
     return;
   }
 

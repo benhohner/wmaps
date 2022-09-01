@@ -34,7 +34,7 @@ class KeyPressure {
         // Note: if lots of keycodes have listeners, this slows down
         this._keydownListeners.forEach((listener) => {
           if (listener[0] === e.keyCode) {
-            listener[1]();
+            listener[1](e);
           }
         });
       }
@@ -43,7 +43,7 @@ class KeyPressure {
     scope.onkeyup = (e) => {
       this._keyupListeners.forEach((listener) => {
         if (listener[0] === e.keyCode) {
-          listener[1]();
+          listener[1](e);
         }
       });
 
