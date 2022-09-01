@@ -36,24 +36,25 @@ let collapsed: boolean = false;
 let wasResizing: boolean = false;
 
 function resize(event: MouseEvent) {
-  wasResizing = true;
-  console.log("resizing");
+  event.preventDefault();
   const deltaX = lastMouseX - event.x;
-  const newWidth = parseInt(getComputedStyle(panel!, "").width) + deltaX;
+  if (deltaX) {
+    const newWidth = parseInt(getComputedStyle(panel!, "").width) + deltaX;
 
-  panel!.style.width = newWidth + "px";
+    panel!.style.width = newWidth + "px";
 
-  if (newWidth > 40) {
-    collapsed = false;
+    if (newWidth > 40) {
+      collapsed = false;
+    }
+
+    wasResizing = true;
+    onResize();
+    lastMouseX = event.x;
   }
-
-  onResize();
-
-  lastMouseX = event.x;
 }
 
 document!.addEventListener(
-  "pointerdown",
+  "mousedown",
   function (event) {
     const resizeBounds = resizeDiv!.getBoundingClientRect();
 
@@ -61,16 +62,19 @@ document!.addEventListener(
       event.x >= Math.floor(resizeBounds!.left) &&
       event.x <= Math.ceil(resizeBounds!.right)
     ) {
+      document.body.style.cursor = "ew-resize";
+
       initialMouseX = event.x;
       lastMouseX = initialMouseX;
-      document.addEventListener("pointermove", resize, false);
+
+      document.addEventListener("mousemove", resize, false);
     }
   },
   false
 );
 
 document.addEventListener(
-  "pointerup",
+  "mouseup",
   function (event: MouseEvent) {
     if (wasResizing) {
       if (panel!.clientWidth < 41) {
@@ -94,10 +98,14 @@ document.addEventListener(
         }
 
         collapsed = !collapsed;
+
+        lastMouseX = 0; // Prevent further toggling if the mouse hasn't moved.
         onResize();
       }
     }
-    document.removeEventListener("pointermove", resize, false);
+
+    document.body.style.cursor = "auto";
+    document.removeEventListener("mousemove", resize, false);
   },
   false
 );
