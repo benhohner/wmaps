@@ -30,6 +30,7 @@ const Theme = EditorView.theme({
     fontWeight: "400",
   },
   ".cm-gutters": {
+    color: "#d0d0d0",
     backgroundColor: "transparent",
     borderRight: "none",
   },

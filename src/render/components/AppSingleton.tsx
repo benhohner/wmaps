@@ -46,7 +46,7 @@ class AppSingleton extends Application {
       {
         fill: "#000000",
         // supersize font based on dpr
-        fontSize: 14 * this.renderer.resolution,
+        fontSize: 16 * this.renderer.resolution,
         fontWeight: "normal",
       },
       {
@@ -93,7 +93,7 @@ class AppSingleton extends Application {
         container.appendChild(el);
         el.className = "componentInput";
         el.type = "text";
-        el.style.fontSize = "14px";
+        el.style.fontSize = "15px";
         el.size = 1;
         el.style.width = "8px";
         el.tabIndex = 1;
@@ -103,7 +103,7 @@ class AppSingleton extends Application {
         el2.style.visibility = "hidden";
         el2.style.whiteSpace = "pre";
         el2.style.top = "-100px";
-        el2.style.fontSize = "14px";
+        el2.style.fontSize = "15px";
         el2.style.fontFamily = "inherit";
         el2.style.padding = "1px 2px";
         container.appendChild(el2);

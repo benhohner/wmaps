@@ -12,7 +12,7 @@ export const Line = (
 ): LineT => {
   const g = new Graphics() as LineT;
 
-  g.lineStyle(48, 0x000000, 1, 0.5, true);
+  g.lineStyle(1, 0x000000, 1, 0.5, false);
   g.moveTo(componentAx, componentAy);
   g.lineTo(componentBx, componentBy);
   g.endFill();
@@ -28,7 +28,7 @@ export const Line = (
     componentBy: number
   ) => {
     g.clear();
-    g.lineStyle(48, 0x000000, 1, 0.5, true);
+    g.lineStyle(1, 0x000000, 1, 0.5, false);
     g.moveTo(componentAx, componentAy);
     g.lineTo(componentBx, componentBy);
     g.endFill();

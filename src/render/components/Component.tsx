@@ -76,11 +76,11 @@ export const Component = (
 
   const text = new BitmapText(nodeKey, {
     fontName: "TitleFont",
-    fontSize: 14,
+    fontSize: 16,
   });
 
-  text.x = 8;
-  text.y = -15;
+  text.x = 9;
+  text.y = -16;
 
   g.addChild(text);
 
