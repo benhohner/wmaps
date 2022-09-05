@@ -8,6 +8,8 @@ import {
   DragObject,
 } from "../utilities/Draggable";
 
+import { Rectangle } from "./Rectangle";
+
 import { ComponentT } from "./types";
 
 import { state, setLineTargetA, subscribe } from "../../state/State";
@@ -81,6 +83,9 @@ export const Component = (
 
   text.x = 9;
   text.y = -16;
+
+  const rect = Rectangle(text.x, text.y, text.width, text.height);
+  g.addChild(rect);
 
   g.addChild(text);
 
