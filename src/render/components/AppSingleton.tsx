@@ -51,7 +51,7 @@ class AppSingleton extends Application {
       },
       {
         chars:
-          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~1234567890!@#$%^&*-=_+()[]{}<>,./;':\"\\| ",
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~1234567890!@#$%^&?*-=_+()[]{}<>,./;':\"\\| ",
       }
     );
 

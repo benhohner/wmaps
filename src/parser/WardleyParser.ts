@@ -31,7 +31,8 @@ export function WardleyScript() {
   // TODO: string literal starting with a number matches numberliteral, need to do lookahead
   const StringLiteral = createToken({
     name: "StringLiteral",
-    pattern: /[a-zA-Z0-9_\+:]+([ -]+[a-zA-Z0-9_\+:]+)*/,
+    pattern:
+      /[a-zA-Z0-9_\+:\?!@#$%^&\*\(\)\{\}\/`~]+([ -]+[a-zA-Z0-9_\+:\?!@#$%^&\*\(\)\{\}\/`~]+)*/,
   });
 
   const NumberLiteral = createToken({
@@ -68,7 +69,7 @@ export function WardleyScript() {
 
   const WardleyLexer = new Lexer(wardleyTokens, {
     // Less position info tracked, reduces verbosity of the playground output.
-    positionTracking: "onlyStart",
+    // positionTracking: "onlyStart",
   });
 
   // ----------------- parser -----------------
