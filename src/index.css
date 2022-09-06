@@ -1,8 +1,13 @@
+:root {
+  --topMenuHeight: 48px;
+}
+
 body {
   margin: 0;
-  display: flex;
   height: 100vh;
-  flex-direction: row;
+  /* TODO: change to grid */
+  display: flex;
+  flex-direction: column;
 }
 
 body,
@@ -10,8 +15,22 @@ input {
   font-family: "JetBrains Mono", "Consolas", "Courier New", monospace;
 }
 
+#topMenu {
+  height: 48px;
+  flex: 0 0 48px;
+}
+
+#mainContainer {
+  width: 100%;
+  flex: 1 1;
+  height: calc(100vh - var(--topMenuHeight));
+  display: flex;
+  flex-direction: row;
+  position: relative;
+}
+
 #editorContainer,
-#app {
+#map {
   margin: 0;
   padding: 0;
   overflow: hidden;
@@ -19,15 +38,17 @@ input {
 
 #editorContainer {
   width: 40vw;
+  display: flex;
+  flex-direction: column;
 }
 
 #editor {
-  min-height: 100vh;
   min-width: 380px;
   overflow: hidden;
+  height: 100%;
 }
 
-#app {
+#map {
   width: 60vw;
   line-height: 0;
   flex: 1 1;
@@ -87,9 +108,9 @@ input {
 }
 
 .cm-editor {
-  height: 100vh;
+  max-height: 100%;
 }
 .cm-scroller {
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: auto;
 }

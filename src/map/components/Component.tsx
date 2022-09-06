@@ -1,4 +1,4 @@
-import { Graphics, Point, BitmapText, InteractionEvent } from "pixi.js";
+import { Graphics, Point, BitmapText, Container } from "pixi.js";
 
 import KeyPressure from "../utilities/KeyPressure";
 import {
@@ -12,20 +12,51 @@ import { Rectangle } from "./Rectangle";
 
 import { ComponentT } from "./types";
 
-import { state, setLineTargetA, subscribe } from "../../state/State";
-
+import {
+  state,
+  setLineTargetA,
+  subscribe,
+  setIsTargeting,
+} from "../../state/State";
 import { graph, updateComponentPosition } from "../../state/Graph";
-import { appendText, replaceCoordinates } from "../../editor/Editor";
-import AppSingleton from "./AppSingleton";
 
-const BaseComponent = new Graphics()
-  .lineStyle(0)
-  .beginFill(0x000000, 1)
-  .drawCircle(0, 0, 7)
-  .endFill()
-  .beginFill(0xffffff, 1)
-  .drawCircle(0, 0, 6)
-  .endFill();
+import { appendText, replaceCoordinates } from "../../editor/Editor";
+
+import MapSingleton from "./MapSingleton";
+
+const makeBaseComponent = (g: Graphics): void => {
+  g.clear()
+    .lineStyle(0)
+    .beginFill(0x000000, 1)
+    .drawCircle(0, 0, 7)
+    .endFill()
+    .beginFill(0xffffff, 1)
+    .drawCircle(0, 0, 6)
+    .endFill();
+};
+
+const makeTargetedComponent = (g: Graphics): void => {
+  g.clear()
+    .lineStyle(0)
+    .beginFill(0x00ff00, 1)
+    .drawCircle(0, 0, 8)
+    .endFill()
+    .beginFill(0xffffff, 1)
+    .drawCircle(0, 0, 6)
+    .endFill();
+};
+const makeTargetableComponent = (g: Graphics): void => {
+  g.clear()
+    .lineStyle(0)
+    .beginFill(0x0f30a0, 1)
+    .drawCircle(0, 0, 8)
+    .endFill()
+    .beginFill(0xffffff, 1)
+    .drawCircle(0, 0, 6)
+    .endFill();
+};
+
+const SelectedComponent = new Graphics();
 
 const graphUpdateStrategy: ObjectUpdateStrategy = (obj, x, y) => {
   updateComponentPosition(obj.nodeKey, x, y);
@@ -60,95 +91,66 @@ export const Component = (
   id: number,
   nodeKey: string
 ) => {
+  // Performance optimization by localizing global?
   let kp = KeyPressure;
 
-  // TODO: perf: create base graphics for all states, then swap them
-  let g = new Graphics()
-    .lineStyle(0)
-    .beginFill(0x000000, 1)
-    .drawCircle(0, 0, 7)
-    .endFill()
-    .beginFill(0xffffff, 1)
-    .drawCircle(0, 0, 6)
-    .endFill() as ComponentT;
-
-  g.id = id;
-  g.nodeKey = nodeKey;
-  g.position = new Point(x, y);
+  let component = new Container() as ComponentT;
+  component.id = id;
+  component.nodeKey = nodeKey;
+  component.position = new Point(x, y);
+  setDraggable(component, undefined, undefined, onDragEnd, graphUpdateStrategy);
 
   const text = new BitmapText(nodeKey, {
     fontName: "TitleFont",
     fontSize: 16,
   });
-
   text.x = 9;
   text.y = -16;
 
+  // Add a rectangle under the text in app bg color to visually separate text
+  // from lines
   const rect = Rectangle(text.x, text.y, text.width, text.height);
-  g.addChild(rect);
+  component.addChild(rect);
 
-  g.addChild(text);
+  // paint on top of rect but need text width to build rectangle
+  component.addChild(text);
 
-  setDraggable(g, undefined, undefined, onDragEnd, graphUpdateStrategy);
+  let g = new Graphics();
+  state.interact.isTargeting
+    ? makeTargetableComponent(g)
+    : makeBaseComponent(g);
+  component.addChild(g);
 
   // TODO: Add isControl to state and remove the keydown and keyup listeners
   // Should fix bug where highlights disappear on rerender because event listeners destroyed and recreated
   const unsubscribe = subscribe(state.interact, () => {
     if (state.interact.lineTargetA?.nodeKey === nodeKey) {
-      g.clear();
-      g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
-      g.beginFill(0x00ff00, 1);
-      g.drawCircle(0, 0, 8);
-      g.endFill();
-      g.beginFill(0xffffff, 1);
-      g.drawCircle(0, 0, 6);
-      g.endFill();
-      AppSingleton.dirty = true;
+      makeTargetedComponent(g);
+      MapSingleton.dirty = true;
+    } else if (state.interact.isTargeting) {
+      makeTargetableComponent(g);
+      MapSingleton.dirty = true;
     } else {
-      g.clear();
-      g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
-      g.beginFill(0x0f30a0, 1);
-      g.drawCircle(0, 0, 8);
-      g.endFill();
-      g.beginFill(0xffffff, 1);
-      g.drawCircle(0, 0, 6);
-      g.endFill();
-      AppSingleton.dirty = true;
+      makeBaseComponent(g);
+      MapSingleton.dirty = true;
     }
   });
 
   const keydownListenerID = kp.addKeydownListener(17, () => {
-    g.clear();
-    g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
-    if (state.interact.lineTargetA?.nodeKey === nodeKey) {
-      g.beginFill(0x00ff00, 1);
-    } else {
-      g.beginFill(0x0f30a0, 1);
-    }
-    g.drawCircle(0, 0, 8);
-    g.endFill();
-    g.beginFill(0xffffff, 1);
-    g.drawCircle(0, 0, 6);
-    g.endFill();
-    AppSingleton.dirty = true;
+    setIsTargeting(true);
   });
 
   const keyupListenerID = kp.addKeyupListener(17, () => {
-    g.clear();
-    g.lineStyle(0); // draw a circle, set the lineStyle to zero so the circle doesn't have an outline
-    g.beginFill(0x000000, 1);
-    g.drawCircle(0, 0, 7);
-    g.endFill();
-    g.beginFill(0xffffff, 1);
-    g.drawCircle(0, 0, 6);
-    g.endFill();
-    AppSingleton.dirty = true;
+    setIsTargeting(false);
   });
 
-  g.on("pointerdown", (e) => {
+  // BUG: Change to container.on
+  component.on("pointerdown", (e) => {
     // If ctrl pressed
-    if (kp.keys[17]) {
+    if (state.interact.isTargeting) {
       if (!state.interact.lineTargetA) {
+        // Note: e.target should be the component because events don't bubble
+        // in pixi
         setLineTargetA(e.target);
         return;
       } else if (
@@ -168,13 +170,15 @@ export const Component = (
     setLineTargetA(undefined);
   });
 
-  g.on("removed", () => {
+  component.on("removed", () => {
     unsubscribe();
     kp.removeKeyupListener(keyupListenerID);
     kp.removeKeydownListener(keydownListenerID);
     text.destroy();
+    rect.destroy();
     g.destroy();
+    component.destroy();
   });
 
-  return g;
+  return component;
 };

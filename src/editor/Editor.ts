@@ -7,15 +7,16 @@ import { EditorState } from "@codemirror/state";
 import { basicSetup, EditorView } from "codemirror";
 import { keymap } from "@codemirror/view";
 import { RegExpCursor } from "@codemirror/search";
+import { undo, redo } from "@codemirror/commands";
 
 // @ts-ignore because no typings
 import { vscodeKeymap } from "@replit/codemirror-vscode-keymap";
 
 import debounce from "lodash/debounce";
 
-import { matchComponentRegex } from "./Regexes";
+import { matchComponentRegex, matchEdgeRegex } from "./Regexes";
 import { setEditorText } from "../state/State";
-import AppSingleton from "../render/components/AppSingleton";
+import MapSingleton from "../map/components/MapSingleton";
 
 const Theme = EditorView.theme({
   "&": {
@@ -54,7 +55,7 @@ export const userColor =
   usercolors[Math.floor(Math.random() * usercolors.length)];
 
 const ydoc = new Y.Doc();
-const ytext = ydoc.getText("wardleytext");
+const ytext = ydoc.getText();
 
 export const multiplayerClientID = ydoc.clientID;
 
@@ -121,7 +122,7 @@ export const replaceCoordinates = (
   );
 
   let changes = [];
-  var coords = AppSingleton.rendererToWardleyCoords(x, y);
+  var coords = MapSingleton.rendererToWardleyCoords(x, y);
   for (const next of searchCursor) {
     const to =
       next.from +
@@ -155,15 +156,15 @@ export const replaceCoordinates = (
 };
 
 export const renameComponent = (oldName: string, newName: string) => {
-  const searchCursor = new RegExpCursor(
+  let changes = [];
+
+  const componentSearchCursor = new RegExpCursor(
     editorView.state.doc,
     matchComponentRegex(oldName),
     {}
   );
 
-  let changes = [];
-
-  for (const next of searchCursor) {
+  for (const next of componentSearchCursor) {
     const to =
       next.from +
       next.match.slice(1, 2).reduce((prev, current) => {
@@ -181,21 +182,64 @@ export const renameComponent = (oldName: string, newName: string) => {
     });
   }
 
+  const edgeSearchCursor = new RegExpCursor(
+    editorView.state.doc,
+    matchEdgeRegex(oldName),
+    {}
+  );
+
+  for (const next of edgeSearchCursor) {
+    let to = next.from;
+    let insert = "";
+
+    // LHS Match
+    if (next.match[2]) {
+      to += (next.match[1] ? next.match[1].length : 0) + next.match[2].length;
+      insert = `${next.match[1] ? next.match[1] : ""}${newName}`;
+
+      //RHS Match
+    } else if (next.match[4]) {
+      to +=
+        2 + (next.match[3] ? next.match[3].length : 0) + next.match[4].length;
+      insert = `->${next.match[3] ? next.match[3] : ""}${newName}`;
+    } else {
+      return;
+    }
+
+    changes.push({
+      from: next.from,
+      to,
+      insert,
+    });
+  }
+
   if (changes.length === 0) {
     throw new Error(
-      `Error: "${oldName}" not found in text document. State sync lost or regex error.`
+      `RenameComponentError: "${oldName}" not found in text document. State sync lost or regex error.`
     );
   }
 
   editorView.dispatch({
     changes,
-    selection: { anchor: changes[changes.length - 1].to },
   });
 };
 
 // Save editor state to browser storage before navigating away
 window.addEventListener("beforeunload", function (e) {
   localStorage.setItem("editorText", editorView.state.doc.toString());
+});
+
+document.addEventListener("keydown", (e: KeyboardEvent) => {
+  if (e.ctrlKey) {
+    switch (e.key) {
+      case "z":
+        undo(editorView);
+        break;
+      case "y":
+        redo(editorView);
+        break;
+    }
+  }
 });
 
 const handleEditorChange = debounce((text: string) => {

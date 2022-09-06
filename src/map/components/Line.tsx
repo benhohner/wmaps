@@ -1,6 +1,6 @@
-import { Graphics, Ticker } from "pixi.js";
+import { Graphics } from "pixi.js";
 
-import { LineT, ComponentT } from "./types";
+import { LineT } from "./types";
 
 export const Line = (
   componentAx: number,
@@ -34,27 +34,7 @@ export const Line = (
     g.endFill();
   };
 
-  //     componentA.on("pointermove", () => {
-  //         updateLine(0, g, componentA, componentB)
-  //     } )
-
-  //     componentB.on("pointermove", () => {
-  //         updateLine(0, g, componentA, componentB)
-  //     })
-  //   // STATE: kind of, at least updates here
-  //   g.ticker = new Ticker();
-  //   g.ticker.add((delta) => {
-  //     updateLine(delta, g, componentA, componentB);
-  //   });
-  //   g.ticker.start();
-
-  g.on("removed", () => {
-    // if (g.ticker) {
-    //   g.ticker.stop();
-    //   g.ticker.destroy();
-    // }
-    g.destroy();
-  });
+  g.on("removed", () => g.destroy());
 
   return g;
 };

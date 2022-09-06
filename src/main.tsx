@@ -1,6 +1,6 @@
 import throttle from "lodash/throttle";
 
-import AppSingleton from "./render/components/AppSingleton";
+import MapSingleton from "./map/components/MapSingleton";
 
 import { editorView } from "./editor/Editor";
 import { rerenderGraph } from "./state/Graph";
@@ -62,6 +62,8 @@ document!.addEventListener(
       event.x >= Math.floor(resizeBounds!.left) &&
       event.x <= Math.ceil(resizeBounds!.right)
     ) {
+      event.preventDefault();
+
       document.body.style.cursor = "ew-resize";
 
       initialMouseX = event.x;
@@ -76,6 +78,9 @@ document!.addEventListener(
 document.addEventListener(
   "mouseup",
   function (event: MouseEvent) {
+    document.body.style.cursor = "auto";
+    document.removeEventListener("mousemove", resize, false);
+
     if (wasResizing) {
       if (panel!.clientWidth < 41) {
         panel!.style.width = "1px";
@@ -103,16 +108,13 @@ document.addEventListener(
         onResize();
       }
     }
-
-    document.body.style.cursor = "auto";
-    document.removeEventListener("mousemove", resize, false);
   },
   false
 );
 
 // Resize container on window resize
 const onResize = throttle(() => {
-  AppSingleton.resize();
+  MapSingleton.resize();
   rerenderGraph();
 }, 32);
 window.addEventListener("resize", onResize);
@@ -121,11 +123,11 @@ const run = (elementId: string) => {
   setEditorText(editorView.state.doc.toString());
 
   // Bind app view to root html element
-  document.getElementById(elementId)?.appendChild(AppSingleton.view);
+  document.getElementById(elementId)?.appendChild(MapSingleton.view);
   onResize();
 
   // Render once even if graph is empty
-  AppSingleton.dirty = true;
+  MapSingleton.dirty = true;
 };
 
-run("app");
+run("map");

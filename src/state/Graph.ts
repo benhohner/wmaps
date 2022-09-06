@@ -2,10 +2,10 @@ import isEqual from "lodash/isEqual";
 
 import Graph from "graphology";
 
-import AppSingleton from "../render/components/AppSingleton";
-import { Component } from "../render/components/Component";
-import { Line } from "../render/components/Line";
-import { ComponentT, LineT } from "../render/components/types";
+import MapSingleton from "../map/components/MapSingleton";
+import { Component } from "../map/components/Component";
+import { Line } from "../map/components/Line";
+import { ComponentT, LineT } from "../map/components/types";
 
 import { state, subscribe, getObjectID, setLineTargetA } from "./State";
 import { BaseWardleyVisitor, parseInputToCST } from "../parser/WardleyParser";
@@ -72,8 +72,8 @@ export const addComponent = (
     mounted: true,
   });
 
-  AppSingleton.graphContainer.addChild(component);
-  AppSingleton.dirty = true;
+  MapSingleton.graphContainer.addChild(component);
+  MapSingleton.dirty = true;
 };
 
 export const updateComponentPosition = (
@@ -87,7 +87,7 @@ export const updateComponentPosition = (
     node.component.position.y = y;
     node.coordinates.x = x;
     node.coordinates.y = y;
-    AppSingleton.dirty = true;
+    MapSingleton.dirty = true;
     graph.forEachEdge(nodeKey, updateEdgePosition);
   }
 };
@@ -136,8 +136,8 @@ export const addEdge = (componentAKey: string, componentBKey: string) => {
       nodeKey
     );
 
-    AppSingleton.graphContainer.addChild(component);
-    AppSingleton.dirty = true;
+    MapSingleton.graphContainer.addChild(component);
+    MapSingleton.dirty = true;
 
     graph.addEdge(componentA.nodeKey, componentB.nodeKey, {
       id,
@@ -173,7 +173,7 @@ const updateEdgePosition = (
     attributes.coordinates.stop.x,
     attributes.coordinates.stop.y
   );
-  AppSingleton.dirty = true;
+  MapSingleton.dirty = true;
 };
 
 // SUBSCRIPTIONS
@@ -213,6 +213,10 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
       edgeDecs.forEach((edgeDec: any) => {
         addEdge(edgeDec.lhs, edgeDec.rhs);
       });
+    } else {
+      // If map is empty, rerender once
+      graph.clear();
+      MapSingleton.dirty = true;
     }
   }
 
@@ -240,7 +244,7 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
       const coordinates = this.visit(ctx.coordinates[0]);
 
       // wardleyscript has coordinates backwards
-      const rendererCoords = AppSingleton.wardleyToRendererCoords(
+      const rendererCoords = MapSingleton.wardleyToRendererCoords(
         coordinates[1],
         coordinates[0]
       );
@@ -262,8 +266,9 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
 
 const visitorInstance = new WardleyVisitorToGraph(graph);
 
-export const rerenderGraph = () =>
+export const rerenderGraph = () => {
   visitorInstance.visit(parseInputToCST(state.editor.editorText));
+};
 
 // SUBSCRIPTIONS
 subscribe(state.editor, () => {
@@ -292,5 +297,5 @@ subscribe(state.editor, () => {
 });
 
 graph.on("cleared", function () {
-  AppSingleton.graphContainer.removeChildren();
+  MapSingleton.graphContainer.removeChildren();
 });

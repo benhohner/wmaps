@@ -32,7 +32,7 @@ export function WardleyScript() {
   const StringLiteral = createToken({
     name: "StringLiteral",
     pattern:
-      /[a-zA-Z0-9_\+:\?!@#$%^&\*\(\)\{\}\/`~]+([ -]+[a-zA-Z0-9_\+:\?!@#$%^&\*\(\)\{\}\/`~]+)*/,
+      /[a-zA-Z0-9_\+:\?!@#$%^&\*\(\)\{\}\/\`~]+([ -]+[a-zA-Z0-9_\+:\?!@#$%^&\*\(\)\{\}\/\`~]+)*/,
   });
 
   const NumberLiteral = createToken({
@@ -82,7 +82,8 @@ export function WardleyScript() {
 
     constructor() {
       super(wardleyTokens, {
-        recoveryEnabled: false,
+        // This can cause some problems
+        recoveryEnabled: true,
       });
 
       // shorthand for easier writing and comprehension
@@ -233,7 +234,7 @@ export function parseInput(text: string) {
   if (parserInstance.errors.length > 0) {
     const err = parserInstance.errors[0];
 
-    throw Error(
+    throw new Error(
       `Error: ${err.name} at line ${err.token.startLine} col ${
         err.token.startColumn
       }\n${err.stack!}`
@@ -253,7 +254,7 @@ export function parseInputToCST(text: string) {
   if (parserInstance.errors.length > 0) {
     const err = parserInstance.errors[0];
 
-    throw Error(
+    throw new Error(
       `Error: ${err.name} at line ${err.token.startLine} col ${
         err.token.startColumn
       }\n${err.stack!}`

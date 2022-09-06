@@ -1,5 +1,5 @@
 import { Container, Text, Ticker, TextStyle } from "pixi.js";
-import AppSingleton from "../components/AppSingleton";
+import MapSingleton from "../components/MapSingleton";
 
 export class FPSMonitor extends Container {
   private static readonly DEFAULT_FONT_SIZE: number = 30;
@@ -53,7 +53,7 @@ export class FPSMonitor extends Container {
       this._fpsTextField.text = (
         total / FPSMonitor.DEFAULT_HISTORY_SIZE
       ).toFixed(2);
-      AppSingleton.dirty = true;
+      MapSingleton.dirty = true;
 
       this._ringIndex = 0;
     }

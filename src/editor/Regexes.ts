@@ -5,4 +5,20 @@ function escapeRegex(string: string) {
 export const matchComponentRegex = (componentName: string) =>
   `(component[ \\t]+${escapeRegex(
     componentName
-  )})([ \\t]+)?(\\[.+\\])?([ \\t]+)?(\\/.*)?$`;
+  )})([ \\t]+)?(\\[.+\\])?([ \\t]+)?(\\\/.*)?$`;
+
+// OPTIONAL WHITESPACE
+// $.CONSUME(StringLiteral, { LABEL: "LHS" });
+// $.OPTION(() => $.CONSUME(WhiteSpace));
+// $.CONSUME(Edge);
+// $.OPTION1(() => $.CONSUME1(WhiteSpace));
+// $.CONSUME1(StringLiteral, { LABEL: "RHS" });
+// OPTIONAL WHITESPACE
+// OPTIONAL COMMENT
+
+export const matchEdgeRegex = (edgeComponentName: string) =>
+  `^([ \\t]+)?(${escapeRegex(
+    edgeComponentName
+  )})(?:[ \\t]+)?->|->([ \\t]+)?(${escapeRegex(
+    edgeComponentName
+  )})(?:[ \\t]+)?(?:\\\/.*)?$`;

@@ -1,9 +1,9 @@
-import { replaceCoordinatesRegex } from "./Regexes";
+import { matchComponentRegex } from "./Regexes";
 
-import { it, expect, describe, vitest } from "vitest";
+import { it, expect, describe } from "vitest";
 
 const testRegex = (componentName: string, testString: string) => {
-  const regexp = new RegExp(replaceCoordinatesRegex(componentName), "gm");
+  const regexp = new RegExp(matchComponentRegex(componentName), "gm");
   return regexp.test(testString);
 };
 
