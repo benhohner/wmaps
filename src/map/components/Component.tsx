@@ -59,7 +59,7 @@ const makeTargetableComponent = (g: Graphics): void => {
 const SelectedComponent = new Graphics();
 
 const graphUpdateStrategy: ObjectUpdateStrategy = (obj, x, y) => {
-  updateComponentPosition(obj.nodeKey, x, y);
+  updateComponentPosition(obj.nodeKey, x, y); //->Graph
 };
 
 const onDragEnd: OnDragEndCallback = (e) => {
@@ -81,7 +81,7 @@ const onDragEnd: OnDragEndCallback = (e) => {
       obj.nodeKey,
       obj.dragObjStart.x + (dragPointerEnd.x - obj.dragPointerStart.x),
       obj.dragObjStart.y + (dragPointerEnd.y - obj.dragPointerStart.y)
-    );
+    ); //->Editor
   }
 };
 
@@ -151,7 +151,7 @@ export const Component = (
       if (!state.interact.lineTargetA) {
         // Note: e.target should be the component because events don't bubble
         // in pixi
-        setLineTargetA(e.target);
+        setLineTargetA(e.target); //->State
         return;
       } else if (
         state.interact.lineTargetA &&
@@ -161,13 +161,15 @@ export const Component = (
         if (
           !graph.hasEdge(e.target.nodeKey, state.interact.lineTargetA.nodeKey)
         )
+          //<-Graph
+          // TODO: this string should be borrowed from Parser
           appendText(
-            `\n${state.interact.lineTargetA.nodeKey}->${e.target.nodeKey}`
-          );
+            `\n${state.interact.lineTargetA.nodeKey}.${e.target.nodeKey}`
+          ); //->Editor
       }
     }
     // Reset if clicking self component or not holding control
-    setLineTargetA(undefined);
+    setLineTargetA(undefined); //->State
   });
 
   component.on("removed", () => {

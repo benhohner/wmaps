@@ -28,7 +28,7 @@ export const setEditorText = (text: string) => {
 };
 
 export const getObjectID = (clientID: number = multiplayerClientID) => {
-  return clientID + objectID++;
+  return clientID + objectID++; // <-Editor
 };
 
 export const setLineTargetA = (lineTargetA: ComponentT | undefined) => {

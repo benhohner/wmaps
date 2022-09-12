@@ -83,10 +83,10 @@ class MapSingleton extends Application {
         const handleInputSubmit: OnSubmitHandler = (e) => {
           const target = e.target as HTMLInputElement;
           if (!graph.hasNode(target.value)) {
+            // <-Graph
             const coords = this.rendererToWardleyCoords(mouseX, mouseY);
-            appendText(
-              `\ncomponent ${target.value} [${coords[1]}, ${coords[0]}]`
-            );
+            // TODO: This string should come from Parser
+            appendText(`\n${target.value} [${coords[1]},${coords[0]}]`); // ->Editor
           } else {
             console.error(
               "ComponentRenameError: the new name for the component already exists in the map."
@@ -99,7 +99,7 @@ class MapSingleton extends Application {
           mouseX,
           mouseY,
           handleInputSubmit
-        );
+        ); // ->UI
       } else if (e.detail % 2 === 0 && element) {
         const oldKey = element.nodeKey;
 
@@ -111,7 +111,8 @@ class MapSingleton extends Application {
           const handleInputSubmit: OnSubmitHandler = (e) => {
             const target = e.target as HTMLInputElement;
             if (!graph.hasNode(target.value)) {
-              renameComponent(oldKey, target.value);
+              // <-Graph
+              renameComponent(oldKey, target.value); // ->Editor
             }
           };
 
@@ -121,7 +122,7 @@ class MapSingleton extends Application {
             mouseY,
             handleInputSubmit,
             oldKey
-          );
+          ); // ->UI
         }
       }
     });

@@ -1,5 +1,3 @@
-import isEqual from "lodash/isEqual";
-
 import Graph from "graphology";
 
 import MapSingleton from "../map/components/MapSingleton";
@@ -8,7 +6,7 @@ import { Line } from "../map/components/Line";
 import { ComponentT, LineT } from "../map/components/types";
 
 import { state, subscribe, getObjectID, setLineTargetA } from "./State";
-import { BaseWardleyVisitor, parseInputToCST } from "../parser/WardleyParser";
+import { BaseTogetherVisitor, parseToCST } from "../parser/TogetherParser";
 
 export type NodeAttributes = {
   type: "component";
@@ -57,23 +55,26 @@ export const addComponent = (
   y: number,
   name: string | undefined = undefined
 ) => {
-  const id = getObjectID();
+  const id = getObjectID(); // ->State
   const nodeKey = name || id.toString();
 
-  const component = Component(x, y, id, nodeKey);
+  const component = Component(x, y, id, nodeKey); // ->Renderer
   component.nodeKey = nodeKey;
+  try {
+    graph.addNode(nodeKey, {
+      nodeKey,
+      type: "component",
+      id,
+      coordinates: { x, y },
+      component,
+      mounted: true,
+    });
+  } catch (e) {
+    console.error(e);
+  }
 
-  graph.addNode(nodeKey, {
-    nodeKey,
-    type: "component",
-    id,
-    coordinates: { x, y },
-    component,
-    mounted: true,
-  });
-
-  MapSingleton.graphContainer.addChild(component);
-  MapSingleton.dirty = true;
+  MapSingleton.graphContainer.addChild(component); // ->Renderer
+  MapSingleton.dirty = true; // ->Renderer
 };
 
 export const updateComponentPosition = (
@@ -83,11 +84,11 @@ export const updateComponentPosition = (
 ) => {
   const node = graph.getNodeAttributes(nodeKey);
   if (node) {
-    node.component.position.x = x;
-    node.component.position.y = y;
+    node.component.position.x = x; // ->Renderer
+    node.component.position.y = y; // ->Renderer
     node.coordinates.x = x;
     node.coordinates.y = y;
-    MapSingleton.dirty = true;
+    MapSingleton.dirty = true; // ->Renderer
     graph.forEachEdge(nodeKey, updateEdgePosition);
   }
 };
@@ -125,7 +126,7 @@ export const addEdge = (componentAKey: string, componentBKey: string) => {
     const componentAy = componentA.coordinates.y;
     const componentBx = componentB.coordinates.x;
     const componentBy = componentB.coordinates.y;
-    const id = getObjectID();
+    const id = getObjectID(); // ->State
     const nodeKey = `${componentA.nodeKey}->${componentB.nodeKey}`;
     const component = Line(
       componentAx,
@@ -134,10 +135,10 @@ export const addEdge = (componentAKey: string, componentBKey: string) => {
       componentBy,
       id,
       nodeKey
-    );
+    ); // ->Renderer
 
-    MapSingleton.graphContainer.addChild(component);
-    MapSingleton.dirty = true;
+    MapSingleton.graphContainer.addChild(component); // ->Renderer
+    MapSingleton.dirty = true; // ->Renderer
 
     graph.addEdge(componentA.nodeKey, componentB.nodeKey, {
       id,
@@ -172,12 +173,13 @@ const updateEdgePosition = (
     attributes.coordinates.start.y,
     attributes.coordinates.stop.x,
     attributes.coordinates.stop.y
-  );
-  MapSingleton.dirty = true;
+  ); // ->Renderer
+  MapSingleton.dirty = true; // ->Renderer
 };
 
 // SUBSCRIPTIONS
-export class WardleyVisitorToGraph extends BaseWardleyVisitor {
+export class TogetherVisitorToGraph extends BaseTogetherVisitor {
+  // <-Parser
   // Local reference to graph for speed
   graph: WardleyGraph;
 
@@ -192,16 +194,16 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
   }
 
   /* Visit methods */
-  wardley(ctx: any) {
-    if (ctx.declaration) {
+  default(ctx: any) {
+    if (ctx.statement) {
       // Don't keep reference to deleted item
-      setLineTargetA(undefined);
+      setLineTargetA(undefined); // <-State
 
       graph.clear();
 
       const edgeDecs: any = [];
 
-      ctx.declaration.forEach((dec: any) => {
+      ctx.statement.forEach((dec: any) => {
         const edgeDec = this.visit(dec);
 
         if (edgeDec) {
@@ -216,11 +218,11 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
     } else {
       // If map is empty, rerender once
       graph.clear();
-      MapSingleton.dirty = true;
+      MapSingleton.dirty = true; // ->Renderer
     }
   }
 
-  declaration(ctx: any) {
+  statement(ctx: any) {
     if (ctx.componentDeclaration) {
       this.visit(ctx.componentDeclaration[0]);
       return;
@@ -229,6 +231,19 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
       // so pass them to the top level function which will run last
       return this.visit(ctx.edgeDeclaration[0]);
     }
+    // TODO: add command and note
+  }
+
+  command(ctx: any) {
+    return;
+  }
+
+  attributes(ctx: any) {
+    return;
+  }
+
+  attribute(ctx: any) {
+    return;
   }
 
   edgeDeclaration(ctx: any) {
@@ -247,27 +262,31 @@ export class WardleyVisitorToGraph extends BaseWardleyVisitor {
       const rendererCoords = MapSingleton.wardleyToRendererCoords(
         coordinates[1],
         coordinates[0]
-      );
+      ); // <-Renderer
 
       addComponent(
         rendererCoords[0],
         rendererCoords[1],
-        ctx.StringLiteral[0].image
+        ctx.Identifier[0].image
       );
     } else {
-      addComponent(40, 40, ctx.StringLiteral[0].image);
+      addComponent(40, 40, ctx.Identifier[0].image);
     }
   }
 
   coordinates(ctx: any) {
     return [Number(ctx.LHS[0].image), Number(ctx.RHS[0].image)];
   }
+
+  note(ctx: any) {
+    return;
+  }
 }
 
-const visitorInstance = new WardleyVisitorToGraph(graph);
+const visitorInstance = new TogetherVisitorToGraph(graph);
 
 export const rerenderGraph = () => {
-  visitorInstance.visit(parseInputToCST(state.editor.editorText));
+  visitorInstance.visit(parseToCST(state.editor.editorText)); // <-State
 };
 
 // SUBSCRIPTIONS
@@ -294,8 +313,8 @@ subscribe(state.editor, () => {
   //   }
 
   rerenderGraph();
-});
+}); // <-State
 
 graph.on("cleared", function () {
-  MapSingleton.graphContainer.removeChildren();
+  MapSingleton.graphContainer.removeChildren(); // ->Renderer
 });
