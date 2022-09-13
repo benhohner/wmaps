@@ -1,0 +1,232 @@
+//actors and chain
+component GOVERNMENT [0.99, 0.67]
+component SOCIETY [0.96, 0.72]
+component LEGITIMACY [0.96, 0.64]
+component SOVEREIGNTY [0.91, 0.64]
+component THEATRE [0.79, 0.65]
+component COMPETITION [0.67, 0.62]
+component AWARENESS [0.31, 0.57]
+component CAPABILITY [0.54, 0.55]
+component VISIBILITY [0.42, 0.65]
+component LANDSCAPE [0.10, 0.55]
+
+// pipelines
+pipeline SOVEREIGNTY // [0.43, 0.71]
+pipeline THEATRE // [0.38, 0.7]
+pipeline COMPETITION // [0.53, 0.73]
+pipeline AWARENESS // [0.3, 0.73]
+pipeline CAPABILITY // [0.49, 0.68]
+pipeline VISIBILITY // [0.52, 0.68]
+pipeline LANDSCAPE // [0.4, 0.7]
+
+pipeline SOVEREIGNTY [0.43, 0.71]
+pipeline THEATRE [0.38, 0.7]
+pipeline COMPETITION [0.51, 0.73]
+pipeline AWARENESS [0.3, 0.73]
+pipeline CAPABILITY [0.50, 0.68]
+pipeline VISIBILITY [0.52, 0.68]
+pipeline LANDSCAPE [0.4, 0.7]
+
+
+
+//Deets
+component territorial [0.89, 0.70]
+component economic [0.89, 0.47]
+component political [0.89, 0.52]
+component technological [0.89, 0.44]
+component cultural [0.89, 0.62]
+component security [0.89, 0.56]
+component land [0.77, 0.69]
+component supply chain [0.77, 0.39]
+component sea [0.77, 0.67]
+component cyber [0.77, 0.49]
+
+component culture [0.77, 0.57]
+component chain [0.08, 0.69]
+pipeline chain
+
+component geography [0.08, 0.41]
+pipeline geography
+
+component cultural awareness [0.29, 0.41]
+
+component conflict [0.65, 0.72]
+component collaboration [0.65, 0.52]
+component co-operation [0.65, 0.61]
+component supply chain awareness [0.29, 0.31]
+component territorial awareness [0.29, 0.72]
+component digital chain awareness [0.29, 0.38]
+component kinetic [0.52, 0.67]
+component inflitration [0.52, 0.59]
+component influence [0.52, 0.51]
+component covert [0.40, 0.53]
+component overt [0.40, 0.67]
+component CNI [0.77, 0.52]
+component behavioural landscape [0.08, 0.44]
+
+
+// old
+
+
+// component forecasting [0.25, 0.36]
+// pipeline forecasting [0.25, 0.42]
+// component whatif simulation [0.32, 0.28]
+// component scenario planning [0.23, 0.41]
+// component simulation [0.23, 0.26]
+
+// component model [0.34, 0.35]
+// pipeline model [0.2, 0.49]
+
+// component visualisation [0.32, 0.48]
+// component RT simuluation [0.32, 0.39]
+// component HOOTL [0.32, 0.21]
+
+
+
+// component delivery [0.26, 0.67]
+// pipeline delivery [0.53, 0.7]
+// component manufacturer [0.12, 0.61]
+// pipeline manufacturer [0.42, 0.69]
+// component supplier [0.06, 0.68]
+// pipeline supplier [0.59, 0.72]
+
+// component transportation [0.20, 0.66]
+// pipeline transportation [0.64, 0.72]
+
+// component raw materials [0.04, 0.66]
+// component raw data [0.04, 0.63]
+// component factory [0.10, 0.68]
+
+// component energy [0.04, 0.71]
+// component critical minerals [0.04, 0.60]
+
+// component distributor [0.24, 0.69]
+// component logistics [0.24, 0.54]
+// component additive [0.10, 0.43]
+// component robotics [0.10, 0.58]
+// component automation [0.10, 0.50]
+// component marketplace [0.24, 0.65]
+
+
+// component drones [0.18, 0.65]
+// component HGV [0.18, 0.71]
+// component internet [0.18, 0.69]
+// component analysis [0.10, 0.65]
+
+// evolve influence 0.46
+//Things to add
+// component trust [0.90, 0.10]
+// component heirarchy [0.84, 0.10]
+// component sensors [0.79, 0.10]
+// component manufacturer [0.12, 0.61]
+
+// //Chain
+// component sanctions [0.70, 0.60]
+// component acqusition [0.88, 0.47]
+// component logistics [0.24, 0.54]
+// component supply chain [0.77, 0.39]
+// pipeline supply chain [0.46, 0.75]
+// component centralised [0.39, 0.70]
+// component decentralised [0.39, 0.51]
+// component costs [0.20, 0.59]
+// component experience [0.32, 0.43]
+// component situational awareness [0.28, 0.37]
+// pipeline situational awareness [0.27, 0.45]
+// component co-ordination [0.17, 0.65]
+// component air support [0.03, 0.65]
+// component tactics [0.49, 0.54]
+
+// component sourcing [0.14, 0.58]
+// pipeline sourcing [0.34, 0.68]
+// component domestic [0.12, 0.63]
+// component bespoke [0.12, 0.38]
+
+// component materials [0.04, 0.59]
+// component manufacture [0.79, 0.52]
+// component conflict [0.65, 0.72]
+// component capability [0.54, 0.55]
+// component kinetic [0.52, 0.67]
+// component competition [0.67, 0.64]
+// pipeline competition [0.53, 0.73]
+// component delivery [0.26, 0.67]
+// pipeline delivery [0.53, 0.7]
+// component Theatre [0.72, 0.66]
+// pipeline Theatre [0.47, 0.72]
+// component technology [0.58, 0.50]
+// component organic [0.58, 0.66]
+// component assurance [0.04, 0.47]
+// component collaboration [0.65, 0.52]
+
+// //relationships
+GOVERNMENT->SOCIETY
+GOVERNMENT->LEGITIMACY
+LEGITIMACY->SOVEREIGNTY
+territorial->land
+economic->supply chain
+SOVEREIGNTY->THEATRE
+sea->territorial
+economic->cyber
+cyber->technological
+cyber->political
+SOVEREIGNTY->COMPETITION
+competition->awareness
+theatre->awareness
+supply chain->supply chain awareness
+land->territorial awareness
+cyber->digital chain awareness
+visibility->competition
+SOVEREIGNTY->CAPABILITY
+covert->inflitration
+CAPABILITY->AWARENESS
+// cultural->influence
+CNI->supply chain awareness
+security->CNI
+AWARENESS -> LANDSCAPE
+
+// manufacturer->manufacture
+// Government->competition
+// conflict->capability
+// capability->Theatre
+// kinetic->delivery
+// delivery->logistics
+// delivery->tactics
+// logistics->supply chain
+// supply chain->co-ordination
+// co-ordination->air support
+// supply chain->situational awareness
+// supply chain->sourcing
+// sourcing->assurance
+// sourcing->materials
+// manufacture->sourcing
+// acqusition->manufacture
+// supply chain->costs
+// decentralised->experience
+// conflict->situational awareness
+// situational awareness->kinetic
+// Government->society
+supply chain awareness->chain
+chain->digital chain awareness
+// chain->distributor
+chain->manufacturer
+// distributor->manufacturer
+manufacturer->supplier
+chain->delivery
+delivery->manufacturer
+capability->chain
+logistics->transportation
+supply chain awareness->forecasting
+digital chain awareness->forecasting
+model->simulation
+chain->model
+culture->political
+culture->cultural
+territorial awareness->geography
+influence->covert
+forecasting->chain
+culture->cultural awareness
+cultural awareness->behavioural landscape
+influence->culture
+land->kinetic
+inflitration->cyber
+VISIBILITY->COMPETITION
+AWARENESS->VISIBILITY
