@@ -137,9 +137,9 @@ export const replaceCoordinates = (
     changes.push({
       from: next.from,
       to,
-      insert: `${next.match[1]}${next.match[2] || ""}[${coords[1]}, ${
+      insert: `${next.match[1]}${next.match[2] || ""}[${coords[1]},${
         coords[0]
-      }]${next.match[4] || ""}`,
+      }]${next.match[4] || ""}`, // TODO: should be coming from Parser
     });
   }
 
@@ -178,7 +178,7 @@ export const renameComponent = (oldName: string, newName: string) => {
     changes.push({
       from: next.from,
       to,
-      insert: `component ${newName}`,
+      insert: `${newName}`,
     });
   }
 

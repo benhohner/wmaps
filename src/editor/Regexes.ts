@@ -3,7 +3,7 @@ function escapeRegex(string: string) {
 }
 
 export const matchComponentRegex = (componentName: string) =>
-  `(component[ \\t]+${escapeRegex(
+  `(^[ \\t]*${escapeRegex(
     componentName
   )})([ \\t]+)?(\\[.+\\])?([ \\t]+)?(\\\/.*)?$`;
 
@@ -19,6 +19,6 @@ export const matchComponentRegex = (componentName: string) =>
 export const matchEdgeRegex = (edgeComponentName: string) =>
   `^([ \\t]+)?(${escapeRegex(
     edgeComponentName
-  )})(?:[ \\t]+)?->|->([ \\t]+)?(${escapeRegex(
+  )})(?:[ \\t]+)?\\.|\\.([ \\t]+)?(${escapeRegex(
     edgeComponentName
   )})(?:[ \\t]+)?(?:\\\/.*)?$`;

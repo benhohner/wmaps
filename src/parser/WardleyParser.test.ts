@@ -1,28 +1,28 @@
-import { parseInput, WardleyASTT } from "./WardleyParser";
+import { parseToAST, WardleyASTT } from "./WardleyParser";
 
 import { it, expect, describe } from "vitest";
 
 describe("parseInput with whitespace", () => {
   it("works with an empty string", () => {
-    expect(parseInput("")).toStrictEqual([]);
+    expect(parseToAST("")).toStrictEqual([]);
   });
 
   it("works with a space", () => {
-    expect(parseInput(" ")).toStrictEqual([]);
+    expect(parseToAST(" ")).toStrictEqual([]);
   });
 
   it("works with a newline", () => {
-    expect(parseInput("\n")).toStrictEqual([]);
+    expect(parseToAST("\n")).toStrictEqual([]);
   });
 
   it("works with multiple newlines", () => {
-    expect(parseInput("\n\n\n\r\n")).toStrictEqual([]);
+    expect(parseToAST("\n\n\n\r\n")).toStrictEqual([]);
   });
 });
 
 describe("parseInput with component declarations", () => {
   it("single component declaration", () => {
-    expect(parseInput("component apples")).toStrictEqual([
+    expect(parseToAST("component apples")).toStrictEqual([
       {
         componentName: "apples",
         coordinates: undefined,
@@ -32,7 +32,7 @@ describe("parseInput with component declarations", () => {
   });
 
   it("odd characters", () => {
-    expect(parseInput("component _apples 1h92+:_")).toStrictEqual([
+    expect(parseToAST("component _apples 1h92+:_")).toStrictEqual([
       {
         componentName: "_apples 1h92+:_",
         coordinates: undefined,
@@ -42,7 +42,7 @@ describe("parseInput with component declarations", () => {
   });
 
   it("extra whitespace", () => {
-    expect(parseInput("component _apples 1h92+   \t ")).toStrictEqual([
+    expect(parseToAST("component _apples 1h92+   \t ")).toStrictEqual([
       {
         componentName: "_apples 1h92+",
         coordinates: undefined,
@@ -52,7 +52,7 @@ describe("parseInput with component declarations", () => {
   });
 
   it("with coordinates", () => {
-    expect(parseInput("component _apples 1h92+   \t [-1,2.3e1]")).toStrictEqual(
+    expect(parseToAST("component _apples 1h92+   \t [-1,2.3e1]")).toStrictEqual(
       [
         {
           componentName: "_apples 1h92+",
@@ -65,14 +65,14 @@ describe("parseInput with component declarations", () => {
 
   it("fails with coordinates that aren't numbers", () => {
     expect(() =>
-      parseInput('component _apples 1h92+   \t [aoo,"2"]')
+      parseToAST('component _apples 1h92+   \t [aoo,"2"]')
     ).toThrowError("NumberLiteral");
   });
 });
 
 describe("parseInput with edge statement", () => {
   it("single edge statement", () => {
-    expect(parseInput(" apples -> oranges ")).toStrictEqual([
+    expect(parseToAST(" apples -> oranges ")).toStrictEqual([
       {
         lhs: "apples",
         rhs: "oranges",
