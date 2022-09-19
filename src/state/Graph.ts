@@ -285,8 +285,26 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
 
 const visitorInstance = new TogetherVisitorToGraph(graph);
 
+let wasRerenderError = false;
+
 export const rerenderGraph = () => {
-  visitorInstance.visit(parseToCST(state.editor.editorText)); // <-State
+  let isError = false;
+
+  try {
+    visitorInstance.visit(parseToCST(state.editor.editorText)); // <-State
+  } catch (e: any) {
+    const editorDiv = document.getElementById("editor");
+    editorDiv!.style.backgroundColor = "rgba(255, 0, 0, 0.05)";
+    wasRerenderError = true;
+    isError = true;
+    console.error(e);
+  }
+
+  if (wasRerenderError && !isError) {
+    const editorDiv = document.getElementById("editor");
+    editorDiv!.style.backgroundColor = "transparent";
+    wasRerenderError = false;
+  }
 };
 
 // SUBSCRIPTIONS

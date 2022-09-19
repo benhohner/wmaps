@@ -64,7 +64,7 @@
   evolutionlabels=genesis:10,emerging:25,converging:40,commodity:30
   y-axis
   style=wardley
-  scriptversion=1.0.1
+  scriptversion="1.0.1"
 )
 
 // Components

@@ -8,6 +8,7 @@ import { basicSetup, EditorView } from "codemirror";
 import { keymap } from "@codemirror/view";
 import { RegExpCursor } from "@codemirror/search";
 import { undo, redo } from "@codemirror/commands";
+import { linter, lintGutter } from "@codemirror/lint";
 
 // @ts-ignore because no typings
 import { vscodeKeymap } from "@replit/codemirror-vscode-keymap";
@@ -17,6 +18,7 @@ import debounce from "lodash/debounce";
 import { matchComponentRegex, matchEdgeRegex } from "./Regexes";
 import { setEditorText } from "../state/State";
 import MapSingleton from "../map/components/MapSingleton";
+import { togetherScriptLinter } from "./TogetherScriptLinter";
 
 const Theme = EditorView.theme({
   "&": {
@@ -77,11 +79,15 @@ provider.awareness.setLocalStateField("user", {
   colorLight: userColor.light,
 });
 
+const linterExtension = linter(togetherScriptLinter());
+
 const startState = EditorState.create({
   doc: ytext.toString(),
   extensions: [
     keymap.of(vscodeKeymap),
     basicSetup,
+    linterExtension,
+    lintGutter(),
     EditorView.lineWrapping,
     Theme,
     yCollab(ytext, provider.awareness, { undoManager }),
@@ -98,6 +104,7 @@ export const editorView = new EditorView({
   parent: document.getElementById("editor")!,
 });
 
+/* ========= Actions ========= */
 export const appendText = (text: string) => {
   editorView.dispatch({
     changes: {
@@ -224,6 +231,7 @@ export const renameComponent = (oldName: string, newName: string) => {
   });
 };
 
+/* ======== Events ======== */
 // Save editor state to browser storage before navigating away
 window.addEventListener("beforeunload", function (e) {
   localStorage.setItem("editorText", editorView.state.doc.toString());

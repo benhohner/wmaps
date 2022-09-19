@@ -6,6 +6,7 @@ import {
   CstNode,
   TokenType,
   ITokenConfig,
+  ILexingError,
 } from "chevrotain";
 
 import XRegExp from "xregexp";
@@ -396,19 +397,35 @@ const parserInstance = new TogetherParser(togetherTokens);
 export const BaseTogetherVisitor =
   parserInstance.getBaseCstVisitorConstructor();
 
+export class TokenError extends Error {
+  column: number | undefined = undefined;
+  length: number | undefined = undefined;
+  line: number | undefined = undefined;
+  offset: number | undefined = undefined;
+  errors: ILexingError[] = [];
+
+  constructor(message: string | undefined, options?: ErrorOptions | undefined) {
+    super(message, options);
+  }
+}
+
 export function parseToCST(text: string) {
-  // Initiate parse from top level aka default rule ("wardley")
-  parserInstance.input = TogetherLexer.tokenize(text).tokens;
+  // Initiate parse from top level aka default rule ("default")
+  let tokenized = TogetherLexer.tokenize(text);
+
+  if (tokenized.errors.length > 0) {
+    let error = new TokenError("TokenizingError");
+    error.errors = tokenized.errors;
+    throw error;
+  }
+
+  parserInstance.input = tokenized.tokens;
   const cst = parserInstance.default();
 
   if (parserInstance.errors.length > 0) {
-    const err = parserInstance.errors[0];
-    debugger;
-    throw new Error(
-      `Error: ${err.name} at line ${err.token.startLine} col ${
-        err.token.startColumn
-      }\n${err.stack!}`
-    );
+    parserInstance.errors.forEach((e) => {
+      throw e;
+    });
   }
 
   return cst;
