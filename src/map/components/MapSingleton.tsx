@@ -130,17 +130,20 @@ class MapSingleton extends Application {
 
   wardleyToRendererCoords(x: number, y: number) {
     return [
-      (x * this.renderer.width) / this.renderer.resolution,
-      ((1 - y) * this.renderer.height) / this.renderer.resolution,
+      ((x / 100) * this.renderer.width) / this.renderer.resolution,
+      ((1 - y / 100) * this.renderer.height) / this.renderer.resolution,
     ];
   }
 
   rendererToWardleyCoords(x: number, y: number) {
     return [
-      ((1 / this.renderer.width) * this.renderer.resolution * x).toFixed(3),
-      (1 - (1 / this.renderer.height) * this.renderer.resolution * y).toFixed(
-        3
+      ((1 / this.renderer.width) * this.renderer.resolution * x * 100).toFixed(
+        1
       ),
+      (
+        100 -
+        (1 / this.renderer.height) * this.renderer.resolution * y * 100
+      ).toFixed(1),
     ];
   }
 }
