@@ -130,6 +130,8 @@ export const replaceCoordinates = (
 
   let changes = [];
   var coords = MapSingleton.rendererToWardleyCoords(x, y);
+
+  // BUG: update slice and matches to match new regex for togetherscript
   for (const next of searchCursor) {
     const to =
       next.from +

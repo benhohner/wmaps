@@ -18,45 +18,72 @@ import {
   subscribe,
   setIsTargeting,
 } from "../../state/State";
-import { graph, updateComponentPosition } from "../../state/Graph";
+import {
+  graph,
+  NodeAttributes,
+  updateComponentPosition,
+} from "../../state/Graph";
 
 import { appendText, replaceCoordinates } from "../../editor/Editor";
 
 import MapSingleton from "./MapSingleton";
+import { PipelineContainer } from "./PipelineContainer";
 
-const makeBaseComponent = (g: Graphics): void => {
-  g.clear()
-    .lineStyle(0)
-    .beginFill(0x000000, 1)
-    .drawCircle(0, 0, 7)
-    .endFill()
-    .beginFill(0xffffff, 1)
-    .drawCircle(0, 0, 6)
-    .endFill();
+const componentColors = {
+  normalBackground: 0xffffff,
+  untargetedBorder: 0x000000,
+  targetableBorder: 0x0f30a0,
+  targetedBorder: 0x00ff00,
 };
 
-const makeTargetedComponent = (g: Graphics): void => {
-  g.clear()
-    .lineStyle(0)
-    .beginFill(0x00ff00, 1)
-    .drawCircle(0, 0, 8)
-    .endFill()
-    .beginFill(0xffffff, 1)
-    .drawCircle(0, 0, 6)
-    .endFill();
+const componentStyles = {
+  normal: {
+    default: (g: Graphics): void => {
+      g.clear()
+        .lineStyle(1, componentColors.untargetedBorder, undefined, 1)
+        .beginFill(componentColors.normalBackground, 1)
+        .drawCircle(0, 0, 6)
+        .endFill();
+    },
+    targetable: (g: Graphics): void => {
+      g.clear()
+        .lineStyle(2, componentColors.targetableBorder, undefined, 1)
+        .beginFill(componentColors.normalBackground, 1)
+        .drawCircle(0, 0, 6)
+        .endFill();
+    },
+    targeted: (g: Graphics): void => {
+      g.clear()
+        .lineStyle(2, componentColors.targetedBorder, undefined, 1)
+        .beginFill(componentColors.normalBackground, 1)
+        .drawCircle(0, 0, 6)
+        .endFill();
+    },
+  },
+  pipeline: {
+    default: (g: Graphics): void => {
+      g.clear()
+        .lineStyle(1, componentColors.untargetedBorder, undefined, 1)
+        .beginFill(componentColors.normalBackground)
+        .drawRect(-5, -5, 10, 10)
+        .endFill();
+    },
+    targetable: (g: Graphics): void => {
+      g.clear()
+        .lineStyle(2, componentColors.targetableBorder, undefined, 1)
+        .beginFill(componentColors.normalBackground)
+        .drawRect(-5.5, -5.5, 11, 11)
+        .endFill();
+    },
+    targeted: (g: Graphics): void => {
+      g.clear()
+        .lineStyle(2, componentColors.targetedBorder, undefined, 1)
+        .beginFill(componentColors.normalBackground)
+        .drawRect(-5.5, -5.5, 11, 11)
+        .endFill();
+    },
+  },
 };
-const makeTargetableComponent = (g: Graphics): void => {
-  g.clear()
-    .lineStyle(0)
-    .beginFill(0x0f30a0, 1)
-    .drawCircle(0, 0, 8)
-    .endFill()
-    .beginFill(0xffffff, 1)
-    .drawCircle(0, 0, 6)
-    .endFill();
-};
-
-const SelectedComponent = new Graphics();
 
 const graphUpdateStrategy: ObjectUpdateStrategy = (obj, x, y) => {
   updateComponentPosition(obj.nodeKey, x, y); //->Graph
@@ -89,7 +116,10 @@ export const Component = (
   x: number,
   y: number,
   id: number,
-  nodeKey: string
+  nodeKey: string,
+  type: NodeAttributes["type"],
+  labelX: number | undefined = undefined,
+  labelY: number | undefined = undefined
 ) => {
   // Performance optimization by localizing global?
   let kp = KeyPressure;
@@ -104,8 +134,9 @@ export const Component = (
     fontName: "TitleFont",
     fontSize: 16,
   });
-  text.x = 9;
-  text.y = -16;
+
+  text.x = labelX ? 9 + labelX : 9;
+  text.y = labelY ? -16 + labelY : -16;
 
   // Add a rectangle under the text in app bg color to visually separate text
   // from lines
@@ -115,23 +146,31 @@ export const Component = (
   // paint on top of rect but need text width to build rectangle
   component.addChild(text);
 
+  if (type === "pipeline") {
+    const pipe = PipelineContainer(-200, 150);
+    component.addChild(pipe);
+  }
+
   let g = new Graphics();
   state.interact.isTargeting
-    ? makeTargetableComponent(g)
-    : makeBaseComponent(g);
+    ? componentStyles[type].targetable(g)
+    : componentStyles[type].default(g);
   component.addChild(g);
 
   // TODO: Add isControl to state and remove the keydown and keyup listeners
   // Should fix bug where highlights disappear on rerender because event listeners destroyed and recreated
   const unsubscribe = subscribe(state.interact, () => {
-    if (state.interact.lineTargetA?.nodeKey === nodeKey) {
-      makeTargetedComponent(g);
+    if (
+      state.interact.lineTargetA?.nodeKey === nodeKey &&
+      state.interact.isTargeting
+    ) {
+      componentStyles[type].targeted(g);
       MapSingleton.dirty = true;
     } else if (state.interact.isTargeting) {
-      makeTargetableComponent(g);
+      componentStyles[type].targetable(g);
       MapSingleton.dirty = true;
     } else {
-      makeBaseComponent(g);
+      componentStyles[type].default(g);
       MapSingleton.dirty = true;
     }
   });
@@ -144,7 +183,6 @@ export const Component = (
     setIsTargeting(false);
   });
 
-  // BUG: Change to container.on
   component.on("pointerdown", (e) => {
     // If ctrl pressed
     if (state.interact.isTargeting) {

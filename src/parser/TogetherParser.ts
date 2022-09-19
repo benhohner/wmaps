@@ -7,6 +7,7 @@ import {
   TokenType,
   ITokenConfig,
   ILexingError,
+  EOF,
 } from "chevrotain";
 
 import XRegExp from "xregexp";
@@ -112,10 +113,15 @@ const ParenClose = createComposableToken({
   pattern: "\\)",
   pop_mode: true,
 });
-const BraceOpen = createComposableToken({ name: "BraceOpen", pattern: "\\{" });
+const BraceOpen = createComposableToken({
+  name: "BraceOpen",
+  pattern: "\\{",
+  push_mode: "normal_mode",
+});
 const BraceClose = createComposableToken({
   name: "BraceClose",
   pattern: "\\}",
+  pop_mode: true,
 });
 const BracketOpen = createComposableToken({
   name: "BracketOpen",
@@ -130,16 +136,18 @@ const BracketClose = createComposableToken({
 const Newline = createComposableToken({
   name: "Newline",
   pattern: "\\r\\n|\\n",
-  group: Lexer.SKIPPED,
+  line_breaks: true,
+  // group: Lexer.SKIPPED,
 });
 const Whitespace = createComposableToken({
   name: "Whitespace",
   pattern: `[${C("BaseWhitespace")}]+`,
-  // group: Lexer.SKIPPED,
+  group: Lexer.SKIPPED,
 });
 const AttributeBreak = createComposableToken({
   name: "AttributeBreak",
   pattern: `[${C("BaseWhitespace")}\\r\\n]+`,
+  line_breaks: true,
 });
 
 // Identifiers & Keywords
@@ -232,6 +240,7 @@ class TogetherParser extends CstParser {
   private attribute!: ParserMethod<[], CstNode>;
   private edgeDeclaration!: ParserMethod<[], CstNode>;
   private componentDeclaration!: ParserMethod<[], CstNode>;
+  private pipeline!: ParserMethod<[], CstNode>;
   private coordinates!: ParserMethod<[], CstNode>;
   private note!: ParserMethod<[], CstNode>;
 
@@ -251,25 +260,30 @@ class TogetherParser extends CstParser {
           { ALT: () => $.CONSUME(Newline) },
           { ALT: () => $.SUBRULE($.statement) },
           { ALT: () => $.CONSUME(Comment) },
-          { ALT: () => $.CONSUME(Whitespace) },
         ]);
       });
     });
 
     $.statement = $.RULE("statement", () => {
-      $.OR([
-        { ALT: () => $.SUBRULE($.command) },
-        {
-          GATE: $.BACKTRACK($.edgeDeclaration),
-          ALT: () => $.SUBRULE($.edgeDeclaration),
-        },
-        {
-          GATE: $.BACKTRACK($.componentDeclaration),
-          ALT: () => $.SUBRULE($.componentDeclaration),
-        },
-        { ALT: () => $.SUBRULE($.note) },
-      ]);
-      $.OPTION(() => $.CONSUME(Whitespace));
+      $.OR({
+        DEF: [
+          { ALT: () => $.SUBRULE($.command) },
+          {
+            GATE: $.BACKTRACK($.edgeDeclaration),
+            ALT: () => $.SUBRULE($.edgeDeclaration),
+          },
+          {
+            // GATE: $.BACKTRACK($.componentDeclaration), // Do we need this?
+            ALT: () => $.SUBRULE($.componentDeclaration),
+          },
+          { ALT: () => $.SUBRULE($.note) },
+        ],
+        ERR_MSG: "a statement",
+      });
+      $.OR1({
+        DEF: [{ ALT: () => $.CONSUME(Newline) }, { ALT: () => $.CONSUME(EOF) }],
+        ERR_MSG: "a new line",
+      });
     });
 
     $.command = $.RULE("command", () => {
@@ -313,7 +327,7 @@ class TogetherParser extends CstParser {
           },
           {
             ALT: () => {
-              $.MANY_SEP({
+              $.AT_LEAST_ONE_SEP({
                 SEP: Comma,
                 DEF: () => {
                   $.CONSUME1(AttributeIdentifier);
@@ -336,24 +350,13 @@ class TogetherParser extends CstParser {
         $.CONSUME(NumberLiteral);
       });
       $.OPTION1(() => {
-        $.CONSUME(Whitespace);
         $.SUBRULE($.coordinates);
       });
       $.OPTION2(() => {
-        $.CONSUME1(Whitespace);
         $.SUBRULE($.attributes);
       });
       $.OPTION3(() => {
-        $.CONSUME2(Whitespace);
-        $.CONSUME(BraceOpen);
-        $.MANY(() => {
-          $.OPTION4(() => $.CONSUME3(Whitespace));
-          $.SUBRULE($.statement, { LABEL: "Pipeline" });
-        });
-        $.CONSUME(BraceClose);
-      });
-      $.OPTION5(() => {
-        $.CONSUME4(Whitespace);
+        $.SUBRULE($.pipeline);
       });
     });
 
@@ -362,7 +365,16 @@ class TogetherParser extends CstParser {
       $.CONSUME(EdgeJoin);
       $.OPTION(() => $.SUBRULE($.attributes));
       $.CONSUME1(Identifier, { LABEL: "RHS" });
-      $.OPTION1(() => $.CONSUME(Whitespace));
+    });
+
+    $.pipeline = $.RULE("pipeline", () => {
+      $.CONSUME(BraceOpen);
+      $.OPTION(() => $.CONSUME(Newline));
+      $.MANY(() => {
+        $.SUBRULE($.statement);
+      });
+      $.OPTION1(() => $.CONSUME1(Newline));
+      $.CONSUME(BraceClose);
     });
 
     $.coordinates = $.RULE("coordinates", () => {
@@ -377,10 +389,8 @@ class TogetherParser extends CstParser {
 
     $.note = $.RULE("note", () => {
       $.CONSUME(NoteSpecifier);
-      $.OPTION(() => $.CONSUME(Whitespace));
       $.CONSUME(Identifier);
       $.OPTION1(() => {
-        $.CONSUME1(Whitespace);
         $.SUBRULE($.coordinates);
       });
     });
@@ -431,6 +441,7 @@ export function parseToCST(text: string) {
   return cst;
 }
 
+// Disabled until implement AST
 // export function parseToAST(text: string) {
 //   const visitorInstance = new WardleyVisitorToAST();
 //   return visitorInstance.visit(parseToCST(text)) as WardleyASTT;

@@ -7,9 +7,10 @@ import { ComponentT, LineT } from "../map/components/types";
 
 import { state, subscribe, getObjectID, setLineTargetA } from "./State";
 import { BaseTogetherVisitor, parseToCST } from "../parser/TogetherParser";
+import { IRecognitionException } from "chevrotain";
 
 export type NodeAttributes = {
-  type: "component";
+  type: "normal" | "pipeline";
   nodeKey: string;
   id: number;
   coordinates: { x: number; y: number };
@@ -53,17 +54,20 @@ export const graph: WardleyGraph = new Graph({ type: "undirected" });
 export const addComponent = (
   x: number,
   y: number,
-  name: string | undefined = undefined
+  name: NodeAttributes["nodeKey"],
+  type: NodeAttributes["type"],
+  labelX: number | undefined = undefined,
+  labelY: number | undefined = undefined
 ) => {
   const id = getObjectID(); // ->State
   const nodeKey = name || id.toString();
 
-  const component = Component(x, y, id, nodeKey); // ->Renderer
+  const component = Component(x, y, id, nodeKey, type, labelX, labelY); // ->Rendererd
   component.nodeKey = nodeKey;
   try {
     graph.addNode(nodeKey, {
       nodeKey,
-      type: "component",
+      type,
       id,
       coordinates: { x, y },
       component,
@@ -195,6 +199,7 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
 
   /* Visit methods */
   default(ctx: any) {
+    console.log(ctx);
     if (ctx.statement) {
       // Don't keep reference to deleted item
       setLineTargetA(undefined); // <-State
@@ -239,7 +244,7 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
   }
 
   attributes(ctx: any) {
-    return;
+    return ctx.attributes;
   }
 
   attribute(ctx: any) {
@@ -254,24 +259,54 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
     };
   }
 
-  componentDeclaration(ctx: any) {
+  componentDeclaration(
+    ctx: any,
+    pipelineParentY: number | undefined = undefined
+  ) {
+    console.log(ctx);
     if (ctx.coordinates) {
       const coordinates = this.visit(ctx.coordinates[0]);
 
       // wardleyscript has coordinates backwards
       const rendererCoords = MapSingleton.wardleyToRendererCoords(
         coordinates[1],
-        coordinates[0]
+        pipelineParentY ? pipelineParentY : coordinates[0]
       ); // <-Renderer
+
+      if (ctx.pipeline && ctx.pipeline[0].children?.statement?.length > 0) {
+        ctx.pipeline[0].children!.statement.forEach((s: any) => {
+          console.log("visiting", s);
+          if (s.children && s.children.componentDeclaration?.length > 0) {
+            this.visit(
+              s.children.componentDeclaration[0],
+              coordinates[0] - 1.7
+            );
+          }
+        });
+      }
 
       addComponent(
         rendererCoords[0],
         rendererCoords[1],
-        ctx.Identifier[0].image
+        ctx.Identifier[0].image,
+        ctx.pipeline ? "pipeline" : "normal",
+        undefined,
+        pipelineParentY ? 26 : undefined
       );
     } else {
-      addComponent(40, 40, ctx.Identifier[0].image);
+      addComponent(
+        40,
+        pipelineParentY ? pipelineParentY : 40,
+        ctx.Identifier[0].image,
+        ctx.pipeline ? "pipeline" : "normal",
+        undefined,
+        pipelineParentY ? 26 : undefined
+      );
     }
+  }
+
+  pipeline(ctx: any) {
+    return;
   }
 
   coordinates(ctx: any) {
