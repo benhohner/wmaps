@@ -2,8 +2,6 @@ import { proxy, subscribe } from "valtio/vanilla";
 
 import { ComponentT } from "../map/components/types";
 
-import { multiplayerClientID } from "../editor/Editor";
-
 interface StateT {
   editor: { editorText: string };
   interact: {
@@ -20,15 +18,9 @@ export const state = proxy<StateT>({
   },
 });
 
-let objectID = 0;
-
 // ACTIONS
 export const setEditorText = (text: string) => {
   state.editor.editorText = text;
-};
-
-export const getObjectID = (clientID: number = multiplayerClientID) => {
-  return clientID + objectID++; // <-Editor
 };
 
 export const setLineTargetA = (lineTargetA: ComponentT | undefined) => {

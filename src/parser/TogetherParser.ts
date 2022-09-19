@@ -25,7 +25,12 @@ function FRAGMENT(name: string, def: string | RegExp) {
 //   return XRegExp.build(def, f, flags);
 // }
 
-// Return a fragment from the fragment dictionary in a composable form
+/**
+ * Compose
+ *
+ * Return a fragment from the fragment dictionary in a composable form
+ */
+
 function C(name: string) {
   return f[name].source;
 }
@@ -419,7 +424,7 @@ export class TokenError extends Error {
   }
 }
 
-export function parseToCST(text: string) {
+export const parseToCST = (text: string) => {
   // Initiate parse from top level aka default rule ("default")
   let tokenized = TogetherLexer.tokenize(text);
 
@@ -439,10 +444,76 @@ export function parseToCST(text: string) {
   }
 
   return cst;
-}
+};
 
 // Disabled until implement AST
 // export function parseToAST(text: string) {
 //   const visitorInstance = new WardleyVisitorToAST();
 //   return visitorInstance.visit(parseToCST(text)) as WardleyASTT;
 // }
+
+/* ============ Regexes ============ */
+function escapeRegex(string: string) {
+  return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+}
+
+// $.componentDeclaration = $.RULE("componentDeclaration", () => {
+//   $.CONSUME(Identifier);
+//   $.OPTION(() => {
+//     $.CONSUME(DefinitionSpecifier);
+//     $.CONSUME(NumberLiteral);
+//   });
+//   $.OPTION1(() => {
+//     $.SUBRULE($.coordinates);
+//   });
+//   $.OPTION2(() => {
+//     $.SUBRULE($.attributes);
+//   });
+//   $.OPTION3(() => {
+//     $.SUBRULE($.pipeline);
+//   });
+// });
+
+/**
+ * matchComponentRegex
+ * Capture Groups
+ * - 0: everything
+ * - 1: Whitespace (optional)
+ * - 2: component name
+ * - 3: DefinitionSpecifier (optional)
+ * - 4: Whitespace (optional)
+ * - 5: Coordinates (optional)
+ * - 6: Whitespace (optional)
+ * - 7: Attributes (optional)
+ * - 8: Whitespace (optional)
+ * - 9: Pipeline (optional)
+ * - 10: Whitespace (optional)
+ * - 11: Comment (optional)
+ *
+ */
+export const matchComponentRegex = (componentName: string) => {
+  return [
+    `^(${C("Whitespace")})?`,
+    `(${escapeRegex(componentName)})`,
+    `(${C("DefinitionSpecifier")}\\d+)?`,
+    `(${C("Whitespace")})?`,
+    `(${C("BracketOpen")}.+${C("BracketClose")})?`,
+    `(${C("Whitespace")})?`,
+    `(${C("ParenOpen")}[^${C("ParenClose")}]*$|${C("ParenOpen")}.*?${C(
+      "ParenClose"
+    )})?`,
+    `(${C("Whitespace")})?`,
+    `(${C("BraceOpen")})?`,
+    `(${C("Whitespace")})?`,
+    `(${C("Comment")})?$`,
+  ].join("");
+};
+
+export const matchEdgeRegex = (edgeComponentName: string) =>
+  `^(${C("Whitespace")})?(${escapeRegex(edgeComponentName)})(?:${C(
+    "Whitespace"
+  )})?\\.|(\\.(${C("ParenOpen")}.*?${C("ParenClose")})?|\\))(${C(
+    "Whitespace"
+  )})?(${escapeRegex(edgeComponentName)})(?:${C("Whitespace")})?(?:${C(
+    "Comment"
+  )})?$`;

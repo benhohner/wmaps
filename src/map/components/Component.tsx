@@ -115,7 +115,6 @@ const onDragEnd: OnDragEndCallback = (e) => {
 export const Component = (
   x: number,
   y: number,
-  id: number,
   nodeKey: string,
   type: NodeAttributes["type"],
   labelX: number | undefined = undefined,
@@ -125,7 +124,7 @@ export const Component = (
   let kp = KeyPressure;
 
   let component = new Container() as ComponentT;
-  component.id = id;
+
   component.nodeKey = nodeKey;
   component.position = new Point(x, y);
   setDraggable(component, undefined, undefined, onDragEnd, graphUpdateStrategy);
@@ -135,12 +134,19 @@ export const Component = (
     fontSize: 16,
   });
 
+  // TODO: currently checking labelX to tell if pipeline child, will need to pass in children eventually to calculate pipeline width
   text.x = labelX ? 9 + labelX : 9;
   text.y = labelY ? -16 + labelY : -16;
+  text.rotation = labelY ? Math.PI / 6 : 0; // HACK
+
+  if (type === "pipeline") {
+    text.y = -18;
+  }
 
   // Add a rectangle under the text in app bg color to visually separate text
   // from lines
   const rect = Rectangle(text.x, text.y, text.width, text.height);
+  rect.rotation = labelY ? Math.PI / 6 : 0;
   component.addChild(rect);
 
   // paint on top of rect but need text width to build rectangle
@@ -157,8 +163,6 @@ export const Component = (
     : componentStyles[type].default(g);
   component.addChild(g);
 
-  // TODO: Add isControl to state and remove the keydown and keyup listeners
-  // Should fix bug where highlights disappear on rerender because event listeners destroyed and recreated
   const unsubscribe = subscribe(state.interact, () => {
     if (
       state.interact.lineTargetA?.nodeKey === nodeKey &&
@@ -193,7 +197,7 @@ export const Component = (
         return;
       } else if (
         state.interact.lineTargetA &&
-        state.interact.lineTargetA.id !== e.target.id
+        state.interact.lineTargetA.nodeKey !== e.target.nodeKey
       ) {
         // ^ If not trying to link a component to itself
         if (

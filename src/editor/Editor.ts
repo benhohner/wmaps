@@ -14,8 +14,8 @@ import { linter, lintGutter } from "@codemirror/lint";
 import { vscodeKeymap } from "@replit/codemirror-vscode-keymap";
 
 import debounce from "lodash/debounce";
+import { matchComponentRegex, matchEdgeRegex } from "../parser/TogetherParser";
 
-import { matchComponentRegex, matchEdgeRegex } from "./Regexes";
 import { setEditorText } from "../state/State";
 import MapSingleton from "../map/components/MapSingleton";
 import { togetherScriptLinter } from "./TogetherScriptLinter";
@@ -105,6 +105,16 @@ export const editorView = new EditorView({
 });
 
 /* ========= Actions ========= */
+export const enableErrorMode = (): void => {
+  const editorDiv = document.getElementById("editor");
+  editorDiv!.style.backgroundColor = "rgba(255, 0, 0, 0.05)";
+};
+
+export const disableErrorMode = (): void => {
+  const editorDiv = document.getElementById("editor");
+  editorDiv!.style.backgroundColor = "transparent";
+};
+
 export const appendText = (text: string) => {
   editorView.dispatch({
     changes: {
@@ -131,11 +141,10 @@ export const replaceCoordinates = (
   let changes = [];
   var coords = MapSingleton.rendererToWardleyCoords(x, y);
 
-  // BUG: update slice and matches to match new regex for togetherscript
   for (const next of searchCursor) {
     const to =
       next.from +
-      next.match.slice(1, 5).reduce((prev, current) => {
+      next.match.slice(1, 6).reduce((prev, current) => {
         if (current) {
           return prev + current.length;
         } else {
@@ -146,9 +155,9 @@ export const replaceCoordinates = (
     changes.push({
       from: next.from,
       to,
-      insert: `${next.match[1]}${next.match[2] || ""}[${coords[1]},${
-        coords[0]
-      }]${next.match[4] || ""}`, // TODO: should be coming from Parser
+      insert: `${next.match[1] || ""}${next.match[2]}${next.match[3] || ""}${
+        next.match[4] || ""
+      }[${coords[1]},${coords[0]}]`, // TODO: should be coming from Parser
     });
   }
 
@@ -164,6 +173,7 @@ export const replaceCoordinates = (
   });
 };
 
+// BUG: update slice and matches to match new regex for togetherscript
 export const renameComponent = (oldName: string, newName: string) => {
   let changes = [];
 
@@ -176,7 +186,7 @@ export const renameComponent = (oldName: string, newName: string) => {
   for (const next of componentSearchCursor) {
     const to =
       next.from +
-      next.match.slice(1, 2).reduce((prev, current) => {
+      next.match.slice(2, 3).reduce((prev, current) => {
         if (current) {
           return prev + current.length;
         } else {
@@ -196,29 +206,30 @@ export const renameComponent = (oldName: string, newName: string) => {
     matchEdgeRegex(oldName),
     {}
   );
+  console.log(matchEdgeRegex("apple"));
 
   for (const next of edgeSearchCursor) {
+    let from = next.from;
     let to = next.from;
-    let insert = "";
 
     // LHS Match
+    console.log(next.match);
     if (next.match[2]) {
-      to += (next.match[1] ? next.match[1].length : 0) + next.match[2].length;
-      insert = `${next.match[1] ? next.match[1] : ""}${newName}`;
+      from += next.match[1] ? next.match[1].length : 0;
+      to = from + next.match[2].length;
 
       //RHS Match
-    } else if (next.match[4]) {
-      to +=
-        2 + (next.match[3] ? next.match[3].length : 0) + next.match[4].length;
-      insert = `->${next.match[3] ? next.match[3] : ""}${newName}`;
+    } else if (next.match[6]) {
+      from += next.match[3].length + (next.match[5] ? next.match[5].length : 0);
+      to = from + next.match[6].length;
     } else {
       return;
     }
 
     changes.push({
-      from: next.from,
+      from,
       to,
-      insert,
+      insert: newName,
     });
   }
 

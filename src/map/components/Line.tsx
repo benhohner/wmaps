@@ -7,7 +7,6 @@ export const Line = (
   componentAy: number,
   componentBx: number,
   componentBy: number,
-  id: number,
   nodeKey: string
 ): LineT => {
   const g = new Graphics() as LineT;
@@ -18,7 +17,6 @@ export const Line = (
   g.endFill();
 
   g.zIndex = -1;
-  g.id = id;
   g.nodeKey = nodeKey;
 
   g.updateLine = (

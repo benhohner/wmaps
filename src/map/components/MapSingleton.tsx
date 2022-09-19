@@ -5,6 +5,8 @@ import { appendText, renameComponent } from "../../editor/Editor";
 import { graph } from "../../state/Graph";
 import { FloatingTextInput, OnSubmitHandler } from "./FloatingTextInput";
 
+import { RenderIndicator } from "../utilities/RenderIndicator";
+
 // @ts-ignore
 Application.prototype.render = null; // Disable auto-rendering by removing the function
 
@@ -13,6 +15,7 @@ class MapSingleton extends Application {
   static _parentElement: HTMLDivElement = document.getElementById(
     "map"
   ) as HTMLDivElement;
+  renderIndicator = new RenderIndicator();
 
   graphContainer = new Container();
   dirty: boolean = false;
@@ -37,6 +40,7 @@ class MapSingleton extends Application {
     this.ticker.add(() => {
       // Manually render when something has changed
       if (this.dirty) {
+        // this.renderIndicator.onRender();
         this.renderer.render(this.stage);
         this.dirty = false;
       }
@@ -63,6 +67,9 @@ class MapSingleton extends Application {
 
     // FPS Monitor
     // this.stage.addChild(new FPSMonitor());
+
+    // Render indicator
+    // this.stage.addChild(this.renderIndicator.r);
 
     this.view.addEventListener("mousedown", (e: MouseEvent) => {
       // TODO: Use me to get rid of endless listeners components?

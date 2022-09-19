@@ -5,14 +5,13 @@ import { Component } from "../map/components/Component";
 import { Line } from "../map/components/Line";
 import { ComponentT, LineT } from "../map/components/types";
 
-import { state, subscribe, getObjectID, setLineTargetA } from "./State";
+import { state, subscribe, setLineTargetA } from "./State";
 import { BaseTogetherVisitor, parseToCST } from "../parser/TogetherParser";
-import { IRecognitionException } from "chevrotain";
+import { disableErrorMode, enableErrorMode } from "../editor/Editor";
 
 export type NodeAttributes = {
   type: "normal" | "pipeline";
   nodeKey: string;
-  id: number;
   coordinates: { x: number; y: number };
   component: ComponentT;
   mounted: boolean;
@@ -21,7 +20,6 @@ export type NodeAttributes = {
 export type EdgeAttributes = {
   type: "edge";
   nodeKey: string;
-  id: number;
   coordinates: {
     start: { x: number; y: number };
     stop: { x: number; y: number };
@@ -59,16 +57,15 @@ export const addComponent = (
   labelX: number | undefined = undefined,
   labelY: number | undefined = undefined
 ) => {
-  const id = getObjectID(); // ->State
-  const nodeKey = name || id.toString();
+  // TODO: Find out what characters aren't possible in nodekeys and prevent them from being used in Identifiers
+  const nodeKey = name;
 
-  const component = Component(x, y, id, nodeKey, type, labelX, labelY); // ->Rendererd
+  const component = Component(x, y, nodeKey, type, labelX, labelY); // ->Renderer
   component.nodeKey = nodeKey;
   try {
     graph.addNode(nodeKey, {
       nodeKey,
       type,
-      id,
       coordinates: { x, y },
       component,
       mounted: true,
@@ -130,14 +127,12 @@ export const addEdge = (componentAKey: string, componentBKey: string) => {
     const componentAy = componentA.coordinates.y;
     const componentBx = componentB.coordinates.x;
     const componentBy = componentB.coordinates.y;
-    const id = getObjectID(); // ->State
     const nodeKey = `${componentA.nodeKey}->${componentB.nodeKey}`;
     const component = Line(
       componentAx,
       componentAy,
       componentBx,
       componentBy,
-      id,
       nodeKey
     ); // ->Renderer
 
@@ -145,7 +140,6 @@ export const addEdge = (componentAKey: string, componentBKey: string) => {
     MapSingleton.dirty = true; // ->Renderer
 
     graph.addEdge(componentA.nodeKey, componentB.nodeKey, {
-      id,
       type: "edge",
       coordinates: {
         start: { x: componentAx, y: componentAy },
@@ -324,17 +318,19 @@ export const rerenderGraph = () => {
 
   try {
     visitorInstance.visit(parseToCST(state.editor.editorText)); // <-State
+    MapSingleton.renderIndicator.reset();
   } catch (e: any) {
-    const editorDiv = document.getElementById("editor");
-    editorDiv!.style.backgroundColor = "rgba(255, 0, 0, 0.05)";
+    enableErrorMode(); // ->Editor
+
     wasRerenderError = true;
     isError = true;
+
     console.error(e);
   }
 
   if (wasRerenderError && !isError) {
-    const editorDiv = document.getElementById("editor");
-    editorDiv!.style.backgroundColor = "transparent";
+    disableErrorMode(); // ->Editor
+
     wasRerenderError = false;
   }
 };
