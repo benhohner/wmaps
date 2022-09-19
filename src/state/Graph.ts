@@ -199,7 +199,6 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
 
   /* Visit methods */
   default(ctx: any) {
-    console.log(ctx);
     if (ctx.statement) {
       // Don't keep reference to deleted item
       setLineTargetA(undefined); // <-State
@@ -263,7 +262,6 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
     ctx: any,
     pipelineParentY: number | undefined = undefined
   ) {
-    console.log(ctx);
     if (ctx.coordinates) {
       const coordinates = this.visit(ctx.coordinates[0]);
 
@@ -275,7 +273,6 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
 
       if (ctx.pipeline && ctx.pipeline[0].children?.statement?.length > 0) {
         ctx.pipeline[0].children!.statement.forEach((s: any) => {
-          console.log("visiting", s);
           if (s.children && s.children.componentDeclaration?.length > 0) {
             this.visit(
               s.children.componentDeclaration[0],
