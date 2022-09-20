@@ -37,14 +37,23 @@ class MapSingleton extends Application {
     MapSingleton._instance = this;
 
     //Set up custom renderer
-    this.ticker.add(() => {
-      // Manually render when something has changed
-      if (this.dirty) {
-        // this.renderIndicator.onRender();
-        this.renderer.render(this.stage);
-        this.dirty = false;
-      }
-    });
+    if (import.meta.env.VITE_DEBUG_ENABLED) {
+      this.ticker.add(() => {
+        // Manually render when something has changed
+        if (this.dirty) {
+          this.renderIndicator.onRender();
+          this.renderer.render(this.stage);
+          this.dirty = false;
+        }
+      });
+    } else {
+      this.ticker.add(() => {
+        if (this.dirty) {
+          this.renderer.render(this.stage);
+          this.dirty = false;
+        }
+      });
+    }
 
     // Create a font for usage
     BitmapFont.from(
@@ -69,7 +78,9 @@ class MapSingleton extends Application {
     // this.stage.addChild(new FPSMonitor());
 
     // Render indicator
-    // this.stage.addChild(this.renderIndicator.r);
+    if (import.meta.env.VITE_DEBUG_ENABLED) {
+      this.stage.addChild(this.renderIndicator.r);
+    }
 
     this.view.addEventListener("mousedown", (e: MouseEvent) => {
       // TODO: Use me to get rid of endless listeners components?
