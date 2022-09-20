@@ -70,7 +70,7 @@ const NumberLiteral = createToken({
 const Whitespace = createToken({
   name: "Whitespace",
   pattern: /[ \t]+/,
-  group: Lexer.SKIPPED,
+  // group: Lexer.SKIPPED,
 });
 
 const SkippedWhitespace = createToken({
