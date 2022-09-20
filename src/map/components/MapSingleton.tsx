@@ -38,7 +38,7 @@ class MapSingleton extends Application {
 
     console.log(import.meta.env.VITE_DEBUG_ENABLED);
     //Set up custom renderer
-    if (import.meta.env.VITE_DEBUG_ENABLED) {
+    if (import.meta.env.VITE_DEBUG_ENABLED === "true") {
       this.ticker.add(() => {
         // Manually render when something has changed
         if (this.dirty) {
@@ -79,7 +79,7 @@ class MapSingleton extends Application {
     // this.stage.addChild(new FPSMonitor());
 
     // Render indicator
-    if (import.meta.env.VITE_DEBUG_ENABLED) {
+    if (import.meta.env.VITE_DEBUG_ENABLED === "true") {
       this.stage.addChild(this.renderIndicator.r);
     }
 
