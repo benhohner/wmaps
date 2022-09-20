@@ -2,7 +2,8 @@ import throttle from "lodash/throttle";
 
 import MapSingleton from "./map/components/MapSingleton";
 
-import { editorView } from "./editor/Editor";
+import { editorView, undoManager } from "./editor/Editor";
+
 import { rerenderGraph } from "./state/Graph";
 import { setEditorText } from "./state/State";
 
@@ -118,6 +119,25 @@ const onResize = throttle(() => {
   rerenderGraph();
 }, 32);
 window.addEventListener("resize", onResize);
+
+const handleHotkeys = (e: KeyboardEvent) => {
+  if (e.ctrlKey && !(e.target as Element).classList.contains("cm-content")) {
+    switch (e.key) {
+      case "Z":
+        undoManager.redo();
+        break;
+      case "z":
+        undoManager.undo();
+        break;
+      case "y":
+        undoManager.redo();
+        break;
+    }
+  }
+};
+
+// bind editor commands to entire window
+window.addEventListener("keydown", handleHotkeys);
 
 const run = (elementId: string) => {
   setEditorText(editorView.state.doc.toString());

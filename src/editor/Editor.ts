@@ -7,7 +7,6 @@ import { EditorState } from "@codemirror/state";
 import { basicSetup, EditorView } from "codemirror";
 import { keymap } from "@codemirror/view";
 import { RegExpCursor } from "@codemirror/search";
-import { undo, redo } from "@codemirror/commands";
 import { linter, lintGutter } from "@codemirror/lint";
 
 // @ts-ignore because no typings
@@ -61,7 +60,7 @@ const ytext = ydoc.getText();
 
 export const multiplayerClientID = ydoc.clientID;
 
-const undoManager = new Y.UndoManager(ytext);
+export const undoManager = new Y.UndoManager(ytext, { captureTimeout: 350 });
 
 // @ts-ignore because Typing error in WebrtcProvider
 const provider = new WebrtcProvider("wardley", ydoc, {
@@ -77,6 +76,10 @@ provider.awareness.setLocalStateField("user", {
   name: "Anonymous " + Math.floor(Math.random() * 1000),
   color: userColor.color,
   colorLight: userColor.light,
+});
+
+provider.awareness.on("change", (change, origin) => {
+  console.log(change, origin);
 });
 
 const linterExtension = linter(togetherScriptLinter());
@@ -206,14 +209,12 @@ export const renameComponent = (oldName: string, newName: string) => {
     matchEdgeRegex(oldName),
     {}
   );
-  console.log(matchEdgeRegex("apple"));
 
   for (const next of edgeSearchCursor) {
     let from = next.from;
     let to = next.from;
 
     // LHS Match
-    console.log(next.match);
     if (next.match[2]) {
       from += next.match[1] ? next.match[1].length : 0;
       to = from + next.match[2].length;
@@ -248,19 +249,6 @@ export const renameComponent = (oldName: string, newName: string) => {
 // Save editor state to browser storage before navigating away
 window.addEventListener("beforeunload", function (e) {
   localStorage.setItem("editorText", editorView.state.doc.toString());
-});
-
-document.addEventListener("keydown", (e: KeyboardEvent) => {
-  if (e.ctrlKey) {
-    switch (e.key) {
-      case "z":
-        undo(editorView);
-        break;
-      case "y":
-        redo(editorView);
-        break;
-    }
-  }
 });
 
 const handleEditorChange = debounce((text: string) => {
