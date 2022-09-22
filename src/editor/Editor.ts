@@ -3,8 +3,6 @@ import * as Y from "yjs";
 import { yCollab } from "y-codemirror.next";
 import { WebrtcProvider } from "y-webrtc";
 
-import { generateUsername } from "unique-username-generator";
-
 import { EditorState } from "@codemirror/state";
 import { basicSetup, EditorView } from "codemirror";
 import { keymap } from "@codemirror/view";
@@ -20,6 +18,7 @@ import { matchComponentRegex, matchEdgeRegex } from "../parser/TogetherParser";
 import { setEditorText } from "../state/State";
 import MapSingleton from "../map/components/MapSingleton";
 import { togetherScriptLinter } from "./TogetherScriptLinter";
+import { generateRandomAnimal } from "../user/utilities/generateRandomAnimal";
 
 const Theme = EditorView.theme({
   "&": {
@@ -76,7 +75,7 @@ const provider = new WebrtcProvider("wardley", ydoc, {
 
 let username = localStorage.getItem("username");
 if (!username) {
-  username = generateUsername();
+  username = generateRandomAnimal();
   localStorage.setItem("username", username);
 }
 
