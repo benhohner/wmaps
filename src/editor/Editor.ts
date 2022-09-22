@@ -3,6 +3,9 @@ import * as Y from "yjs";
 import { yCollab } from "y-codemirror.next";
 import { WebrtcProvider } from "y-webrtc";
 
+import { Heap } from "../analytics/types";
+import randomAnimalName from "random-animal-name";
+
 import { EditorState } from "@codemirror/state";
 import { basicSetup, EditorView } from "codemirror";
 import { keymap } from "@codemirror/view";
@@ -18,6 +21,12 @@ import { matchComponentRegex, matchEdgeRegex } from "../parser/TogetherParser";
 import { setEditorText } from "../state/State";
 import MapSingleton from "../map/components/MapSingleton";
 import { togetherScriptLinter } from "./TogetherScriptLinter";
+
+declare global {
+  interface Window {
+    heap: Heap;
+  }
+}
 
 const Theme = EditorView.theme({
   "&": {
@@ -72,8 +81,16 @@ const provider = new WebrtcProvider("wardley", ydoc, {
   ],
 });
 
+let username = localStorage.getItem("username");
+if (!username) {
+  username = randomAnimalName();
+  localStorage.setItem("username", username);
+}
+
+window.heap.identify(username);
+
 provider.awareness.setLocalStateField("user", {
-  name: "Anonymous " + Math.floor(Math.random() * 1000),
+  name: username,
   color: userColor.color,
   colorLight: userColor.light,
 });
