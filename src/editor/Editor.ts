@@ -78,7 +78,7 @@ provider.awareness.setLocalStateField("user", {
   colorLight: userColor.light,
 });
 
-provider.awareness.on("change", (change, origin) => {
+provider.awareness.on("change", (change: any, origin: any) => {
   console.log(change, origin);
 });
 
@@ -176,7 +176,6 @@ export const replaceCoordinates = (
   });
 };
 
-// BUG: update slice and matches to match new regex for togetherscript
 export const renameComponent = (oldName: string, newName: string) => {
   let changes = [];
 

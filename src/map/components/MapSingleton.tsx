@@ -36,7 +36,6 @@ class MapSingleton extends Application {
 
     MapSingleton._instance = this;
 
-    console.log(import.meta.env.VITE_DEBUG_ENABLED);
     //Set up custom renderer
     if (import.meta.env.VITE_DEBUG_ENABLED === "true") {
       this.ticker.add(() => {
