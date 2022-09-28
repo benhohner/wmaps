@@ -1,122 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MapTogether.io - Multiplayer Wardley Mapping</title>
-    <link rel="preconnect" href="https://fonts.bunny.net" />
-    <link
-      href="https://fonts.bunny.net/css?family=jetbrains-mono:400"
-      rel="stylesheet"
-    />
-    <script>
-      !(function () {
-        var analytics = (window.analytics = window.analytics || []);
-        if (!analytics.initialize)
-          if (analytics.invoked)
-            console.error("Segment snippet included twice.");
-          else {
-            analytics.invoked = !0;
-            analytics.methods = [
-              "trackSubmit",
-              "trackClick",
-              "trackLink",
-              "trackForm",
-              "pageview",
-              "identify",
-              "reset",
-              "group",
-              "track",
-              "ready",
-              "alias",
-              "debug",
-              "page",
-              "once",
-              "off",
-              "on",
-              "addSourceMiddleware",
-              "addIntegrationMiddleware",
-              "setAnonymousId",
-              "addDestinationMiddleware",
-            ];
-            analytics.factory = function (e) {
-              return function () {
-                var t = Array.prototype.slice.call(arguments);
-                t.unshift(e);
-                analytics.push(t);
-                return analytics;
-              };
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MapTogether.io - Multiplayer Wardley Mapping</title>
+  <link rel="preconnect" href="https://fonts.bunny.net" />
+  <link href="https://fonts.bunny.net/css?family=jetbrains-mono:400" rel="stylesheet" />
+  <script>
+    !(function () {
+      var analytics = (window.analytics = window.analytics || []);
+      if (!analytics.initialize)
+        if (analytics.invoked)
+          console.error("Segment snippet included twice.");
+        else {
+          analytics.invoked = !0;
+          analytics.methods = [
+            "trackSubmit",
+            "trackClick",
+            "trackLink",
+            "trackForm",
+            "pageview",
+            "identify",
+            "reset",
+            "group",
+            "track",
+            "ready",
+            "alias",
+            "debug",
+            "page",
+            "once",
+            "off",
+            "on",
+            "addSourceMiddleware",
+            "addIntegrationMiddleware",
+            "setAnonymousId",
+            "addDestinationMiddleware",
+          ];
+          analytics.factory = function (e) {
+            return function () {
+              var t = Array.prototype.slice.call(arguments);
+              t.unshift(e);
+              analytics.push(t);
+              return analytics;
             };
-            for (var e = 0; e < analytics.methods.length; e++) {
-              var key = analytics.methods[e];
-              analytics[key] = analytics.factory(key);
-            }
-            analytics.load = function (key, e) {
-              var t = document.createElement("script");
-              t.type = "text/javascript";
-              t.async = !0;
-              t.src =
-                "https://cdn.segment.com/analytics.js/v1/" +
-                key +
-                "/analytics.min.js";
-              var n = document.getElementsByTagName("script")[0];
-              n.parentNode.insertBefore(t, n);
-              analytics._loadOptions = e;
-            };
-            analytics._writeKey = "9nSHCwlRB8HrSw03F9TR3eZB1MEcfkBT";
-            analytics.SNIPPET_VERSION = "4.15.3";
-            analytics.load("9nSHCwlRB8HrSw03F9TR3eZB1MEcfkBT");
-            analytics.page();
+          };
+          for (var e = 0; e < analytics.methods.length; e++) {
+            var key = analytics.methods[e];
+            analytics[key] = analytics.factory(key);
           }
-      })();
-    </script>
-    <script type="text/javascript">
-      (window.heap = window.heap || []),
-        (heap.load = function (e, t) {
-          (window.heap.appid = e), (window.heap.config = t = t || {});
-          var r = document.createElement("script");
-          (r.type = "text/javascript"),
-            (r.async = !0),
-            (r.src = "https://cdn.heapanalytics.com/js/heap-" + e + ".js");
-          var a = document.getElementsByTagName("script")[0];
-          a.parentNode.insertBefore(r, a);
-          for (
-            var n = function (e) {
-                return function () {
-                  heap.push(
-                    [e].concat(Array.prototype.slice.call(arguments, 0))
-                  );
-                };
-              },
-              p = [
-                "addEventProperties",
-                "addUserProperties",
-                "clearEventProperties",
-                "identify",
-                "resetIdentity",
-                "removeEventProperty",
-                "setEventProperties",
-                "track",
-                "unsetEventProperty",
-              ],
-              o = 0;
-            o < p.length;
-            o++
-          )
-            heap[p[o]] = n(p[o]);
-        });
-      heap.load("4252695370");
-    </script>
-  </head>
-  <body>
-    <div id="topMenu"></div>
-    <div id="mainContainer">
-      <div id="map"></div>
-      <div id="resize"></div>
-      <div id="editorContainer">
-        <div id="editor"></div>
-      </div>
+          analytics.load = function (key, e) {
+            var t = document.createElement("script");
+            t.type = "text/javascript";
+            t.async = !0;
+            t.src =
+              "https://cdn.segment.com/analytics.js/v1/" +
+              key +
+              "/analytics.min.js";
+            var n = document.getElementsByTagName("script")[0];
+            n.parentNode.insertBefore(t, n);
+            analytics._loadOptions = e;
+          };
+          analytics._writeKey = "9nSHCwlRB8HrSw03F9TR3eZB1MEcfkBT";
+          analytics.SNIPPET_VERSION = "4.15.3";
+          analytics.load("9nSHCwlRB8HrSw03F9TR3eZB1MEcfkBT");
+          analytics.page();
+        }
+    })();
+  </script>
+  <script type="text/javascript">
+    const VITE_HEAP_ID = `%VITE_HEAP_ID%`; // Vite env variable
+    (window.heap = window.heap || []),
+      (heap.load = function (e, t) {
+        (window.heap.appid = e), (window.heap.config = t = t || {});
+        var r = document.createElement("script");
+        (r.type = "text/javascript"),
+          (r.async = !0),
+          (r.src = "https://cdn.heapanalytics.com/js/heap-" + e + ".js");
+        var a = document.getElementsByTagName("script")[0];
+        a.parentNode.insertBefore(r, a);
+        for (
+          var n = function (e) {
+            return function () {
+              heap.push(
+                [e].concat(Array.prototype.slice.call(arguments, 0))
+              );
+            };
+          },
+          p = [
+            "addEventProperties",
+            "addUserProperties",
+            "clearEventProperties",
+            "identify",
+            "resetIdentity",
+            "removeEventProperty",
+            "setEventProperties",
+            "track",
+            "unsetEventProperty",
+          ],
+          o = 0;
+          o < p.length;
+          o++
+        )
+          heap[p[o]] = n(p[o]);
+      });
+    heap.load(VITE_HEAP_ID);
+  </script>
+</head>
+
+<body>
+  <div id="topMenu"></div>
+  <div id="mainContainer">
+    <div id="map"></div>
+    <div id="resize"></div>
+    <div id="editorContainer">
+      <div id="editor"></div>
     </div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  </div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>
