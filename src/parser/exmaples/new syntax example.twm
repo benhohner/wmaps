@@ -9,7 +9,11 @@
 //   evolve? (really just creates a new ^ component at evolution and links, maybe remove once future ^ implemented)
 //     [evolution]
 //   type (only one type possible at a time. extensible with marketplace e.g. maturity mapping)
-//     normal 
+//     normal
+//     activity?
+//     practice?
+//     data?
+//     knowledge?
 //     market 
 //     ecosystem (ILC)
 //   [xor]pipeline (sync to use of {children...})
@@ -68,30 +72,30 @@
 )
 
 // Components
-government:2 (p=94,67 l=-78,1 market d="a group of people")
+government:2 [96.6,57.0](p=94,67 l=-78,1 market d="a group of people")
 society:2 [89,73]
 people:5 [80,71]
-belonging (p=75,59 label=-78,1)
-values [67,63] (label=0,-10) {
-  property [65,72] (label=-24,-20)
-  exclusion [32,75] (label=6,12)
-  unionization [34,67]
-  worker's rights [56,70]
-  unionization.worker's rights
+belonging [73.8,62.3](p=75,59 label=-78,1)
+values [67.2,64.5] (label=0,-10) {
+  property [65.5,70.9] (label=-24,-20)
+neoliberalism [66.0,43.9] (label=-113,2)
+  worker's rights [65.7,65.9]
+inclusion [52.3,78.2] (label=3,15)
 }
+  exclusion [36.2,76.7] (label=6,12)
+  unionization [51.1,60.0]
 
+  unionization.worker's rights
 law [17,72] (label=6,7)
 enforcement [11,70] (label=9,9)
 
-fairness [65,75] (label=13,8)
-inclusion [56,75] (label=3,15)
-redistribution [47,63] (label=-81,-9)
-taxation [21,66] (label=-69,5)
+fairness [40.3,82.7] (label=13,8)
+redistribution [46.7,69.3] (label=-81,-9)
+taxation [22.2,66.7] (label=-69,5)
 
-market [95,60] (label=-38,-10)
+market [92.5,61.0] (label=-38,-10)
 trade [90,64] (label=-45,12)
 
-neoliberalism [65, 38] (label=-113,2)
 # NOT [41, 50]
 
 //links
