@@ -27,6 +27,7 @@ const Theme = EditorView.theme({
   ".cm-content": {
     fontFamily: "'JetBrains Mono', Consolas, Courier New, monospace",
     fontWeight: "400",
+    cursor: "text",
   },
   ".cm-scroller": {
     fontFamily: "'JetBrains Mono', Consolas, Courier New, monospace",
@@ -39,6 +40,11 @@ const Theme = EditorView.theme({
   },
   ".cm-gutterElement": {
     userSelect: "none",
+  },
+  ".cm-ySelectionInfo": {
+    fontFamily: "'JetBrains Mono', Consolas, Courier New, monospace",
+    fontWeight: "400",
+    color: "black",
   },
 });
 
@@ -68,7 +74,7 @@ const provider = new WebrtcProvider("wardley", ydoc, {
   password: "isnh388u3unhuie",
   signaling: [
     "wss://signaling.yjs.dev",
-    "wss://y-webrtc-signaling-us.herokuapp.com",
+    // "wss://y-webrtc-signaling-us.herokuapp.com",
     "wss://y-webrtc-signaling-eu.herokuapp.com",
   ],
 });
@@ -87,9 +93,9 @@ provider.awareness.setLocalStateField("user", {
   colorLight: userColor.light,
 });
 
-provider.awareness.on("change", (change: any, origin: any) => {
-  console.log(change, origin);
-});
+// provider.awareness.on("change", (change: any, origin: any) => {
+//   console.log(change, origin);
+// });
 
 const linterExtension = linter(togetherScriptLinter());
 
