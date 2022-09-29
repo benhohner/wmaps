@@ -48,7 +48,7 @@ const Theme = EditorView.theme({
   },
 });
 
-export const usercolors = [
+export const userColors = [
   { color: "#30bced", light: "#30bced33" },
   { color: "#6eeb83", light: "#6eeb8333" },
   { color: "#ffbc42", light: "#ffbc4233" },
@@ -60,17 +60,17 @@ export const usercolors = [
 ];
 
 export const userColor =
-  usercolors[Math.floor(Math.random() * usercolors.length)];
+  userColors[Math.floor(Math.random() * userColors.length)];
 
-const ydoc = new Y.Doc();
-const ytext = ydoc.getText();
+const yDoc = new Y.Doc();
+const yText = yDoc.getText();
 
-export const multiplayerClientID = ydoc.clientID;
+export const multiplayerClientID = yDoc.clientID;
 
-export const undoManager = new Y.UndoManager(ytext, { captureTimeout: 350 });
+export const undoManager = new Y.UndoManager(yText, { captureTimeout: 350 });
 
 // @ts-ignore because Typing error in WebrtcProvider
-const provider = new WebrtcProvider("wardley", ydoc, {
+const provider = new WebrtcProvider("wardley", yDoc, {
   password: "isnh388u3unhuie",
   signaling: [
     "wss://signaling.yjs.dev",
@@ -100,7 +100,7 @@ provider.awareness.setLocalStateField("user", {
 const linterExtension = linter(togetherScriptLinter());
 
 const startState = EditorState.create({
-  doc: ytext.toString(),
+  doc: yText.toString(),
   extensions: [
     keymap.of(vscodeKeymap),
     basicSetup,
@@ -108,7 +108,7 @@ const startState = EditorState.create({
     lintGutter(),
     EditorView.lineWrapping,
     Theme,
-    yCollab(ytext, provider.awareness, { undoManager }),
+    yCollab(yText, provider.awareness, { undoManager }),
     EditorView.updateListener.of((e) => {
       if (e.docChanged) {
         handleEditorChange(e.state.doc.toString());
