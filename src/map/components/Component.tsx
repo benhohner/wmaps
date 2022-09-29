@@ -112,24 +112,84 @@ const onDragEnd: OnDragEndCallback = (e) => {
   }
 };
 
-export const Component = (
-  x: number,
-  y: number,
-  nodeKey: string,
-  type: NodeAttributes["type"],
-  labelX: number | undefined = undefined,
-  labelY: number | undefined = undefined
-) => {
+interface IComponentConfig {
+  x: number;
+  y: number;
+  name: string;
+  type: NodeAttributes["type"];
+  children?: Object[];
+  parent?: Object;
+  labelX?: number;
+  labelY?: number;
+}
+
+export const Component = (config: IComponentConfig) => {
+  let { x, y, name, parent, labelX, labelY, children } = config;
+
+  let componentStyle: "normal" | "pipeline" = "normal";
+  if (children) {
+    componentStyle = "pipeline";
+  }
+
   // Performance optimization by localizing global?
   let kp = KeyPressure;
 
   let component = new Container() as ComponentT;
 
-  component.nodeKey = nodeKey;
+  component.nodeKey = name;
+
+  // NOTE: This will break if we enable nested pipelines
+  if (parent) {
+    y += 12;
+    component.zIndex = 1;
+  }
+
   component.position = new Point(x, y);
+
   setDraggable(component, undefined, undefined, onDragEnd, graphUpdateStrategy);
 
-  const text = new BitmapText(nodeKey, {
+  // Build pipeline container
+  if (children && children.length > 0) {
+    let left: number = 0;
+    let right: number = 0;
+    children.forEach((value: any, index) => {
+      let rhs: number;
+      if (value.children.coordinates) {
+        rhs = parseFloat(value.children.coordinates[0].children.RHS[0].image);
+      } else {
+        rhs = 10;
+      }
+      if (index === 0) {
+        left = rhs;
+        right = rhs;
+      }
+      if (rhs < left) {
+        left = rhs;
+      }
+      if (rhs > right) {
+        right = rhs;
+      }
+    });
+
+    [left] = MapSingleton.wardleyToRendererCoords(left, 0);
+    [right] = MapSingleton.wardleyToRendererCoords(right, 0);
+
+    if (x < left) {
+      left = x;
+    }
+    if (x > right) {
+      right = x;
+    }
+
+    let width = right - left + 20;
+    let offset = left - x - 10;
+
+    const pipe = PipelineContainer(width);
+    pipe.x = offset;
+    component.addChild(pipe);
+  }
+
+  const text = new BitmapText(name, {
     fontName: "TitleFont",
     fontSize: 16,
   });
@@ -137,11 +197,10 @@ export const Component = (
   // TODO: currently checking labelX to tell if pipeline child, will need to pass in children eventually to calculate pipeline width
   text.x = labelX ? 9 + labelX : 9;
   text.y = labelY ? -16 + labelY : -16;
-  text.rotation = labelY ? Math.PI / 6 : 0; // HACK
-
-  if (type === "pipeline") {
+  if (children && children.length > 0 && !parent) {
     text.y = -18;
   }
+  text.rotation = parent ? Math.PI / 6 : 0;
 
   // Add a rectangle under the text in app bg color to visually separate text
   // from lines
@@ -152,29 +211,24 @@ export const Component = (
   // paint on top of rect but need text width to build rectangle
   component.addChild(text);
 
-  if (type === "pipeline") {
-    const pipe = PipelineContainer(-200, 150);
-    component.addChild(pipe);
-  }
-
   let g = new Graphics();
   state.interact.isTargeting
-    ? componentStyles[type].targetable(g)
-    : componentStyles[type].default(g);
+    ? componentStyles[componentStyle].targetable(g)
+    : componentStyles[componentStyle].default(g);
   component.addChild(g);
 
   const unsubscribe = subscribe(state.interact, () => {
     if (
-      state.interact.lineTargetA?.nodeKey === nodeKey &&
+      state.interact.lineTargetA?.nodeKey === name &&
       state.interact.isTargeting
     ) {
-      componentStyles[type].targeted(g);
+      componentStyles[componentStyle].targeted(g);
       MapSingleton.dirty = true;
     } else if (state.interact.isTargeting) {
-      componentStyles[type].targetable(g);
+      componentStyles[componentStyle].targetable(g);
       MapSingleton.dirty = true;
     } else {
-      componentStyles[type].default(g);
+      componentStyles[componentStyle].default(g);
       MapSingleton.dirty = true;
     }
   });

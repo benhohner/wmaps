@@ -10,7 +10,7 @@ import { BaseTogetherVisitor, parseToCST } from "../parser/TogetherParser";
 import { disableErrorMode, enableErrorMode } from "../editor/Editor";
 
 export type NodeAttributes = {
-  type: "normal" | "pipeline";
+  type: "normal";
   nodeKey: string;
   coordinates: { x: number; y: number };
   component: ComponentT;
@@ -48,23 +48,26 @@ export const graph: WardleyGraph = new Graph({ type: "undirected" });
 // }
 // window.graph = graph
 
-// ACTIONS
-export const addComponent = (
-  x: number,
-  y: number,
-  name: NodeAttributes["nodeKey"],
-  type: NodeAttributes["type"],
-  labelX: number | undefined = undefined,
-  labelY: number | undefined = undefined
-) => {
-  // TODO: Find out what characters aren't possible in nodekeys and prevent them from being used in Identifiers
-  const nodeKey = name;
+interface IAddComponentConfig {
+  x: number;
+  y: number;
+  name: NodeAttributes["nodeKey"];
+  type: NodeAttributes["type"];
+  parent?: Object;
+  labelX?: number;
+  labelY?: number;
+  children?: Object[];
+}
 
-  const component = Component(x, y, nodeKey, type, labelX, labelY); // ->Renderer
-  component.nodeKey = nodeKey;
+// ACTIONS
+export const addComponent = (config: IAddComponentConfig) => {
+  let { x, y, name, type } = config;
+  const component = Component(config); // ->Renderer
+
+  // TODO: Find out what characters aren't possible in nodeKeys and prevent them from being used in Identifiers
   try {
-    graph.addNode(nodeKey, {
-      nodeKey,
+    graph.addNode(name, {
+      nodeKey: name,
       type,
       coordinates: { x, y },
       component,
@@ -123,10 +126,10 @@ export const addEdge = (componentAKey: string, componentBKey: string) => {
   }
 
   if (componentA?.mounted && componentB?.mounted) {
-    const componentAx = componentA.coordinates.x;
-    const componentAy = componentA.coordinates.y;
-    const componentBx = componentB.coordinates.x;
-    const componentBy = componentB.coordinates.y;
+    const componentAx = componentA.component.x;
+    const componentAy = componentA.component.y;
+    const componentBx = componentB.component.x;
+    const componentBy = componentB.component.y;
     const nodeKey = `${componentA.nodeKey}->${componentB.nodeKey}`;
     const component = Line(
       componentAx,
@@ -142,8 +145,8 @@ export const addEdge = (componentAKey: string, componentBKey: string) => {
     graph.addEdge(componentA.nodeKey, componentB.nodeKey, {
       type: "edge",
       coordinates: {
-        start: { x: componentAx, y: componentAy },
-        stop: { x: componentBx, y: componentBy },
+        start: { x: componentA.coordinates.x, y: componentA.coordinates.y },
+        stop: { x: componentB.coordinates.x, y: componentB.coordinates.y },
       },
       nodeKey,
       mounted: true,
@@ -161,10 +164,10 @@ const updateEdgePosition = (
   targetAttributes: NodeAttributes,
   undirected: boolean
 ) => {
-  attributes.coordinates.start.x = sourceAttributes.coordinates.x;
-  attributes.coordinates.start.y = sourceAttributes.coordinates.y;
-  attributes.coordinates.stop.x = targetAttributes.coordinates.x;
-  attributes.coordinates.stop.y = targetAttributes.coordinates.y;
+  attributes.coordinates.start.x = sourceAttributes.component.x;
+  attributes.coordinates.start.y = sourceAttributes.component.y;
+  attributes.coordinates.stop.x = targetAttributes.component.x;
+  attributes.coordinates.stop.y = targetAttributes.component.y;
 
   attributes.component.updateLine(
     attributes.coordinates.start.x,
@@ -193,15 +196,15 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
 
   /* Visit methods */
   default(ctx: any) {
+    // Don't keep reference to deleted item
+    setLineTargetA(undefined); // <-State
+    graph.clear();
+
     if (ctx.statement) {
-      // Don't keep reference to deleted item
-      setLineTargetA(undefined); // <-State
-
-      graph.clear();
-
       const edgeDecs: any = [];
 
       ctx.statement.forEach((dec: any) => {
+        // Only edgeDeclarations return objects to the top level
         const edgeDec = this.visit(dec);
 
         if (edgeDec) {
@@ -215,7 +218,6 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
       });
     } else {
       // If map is empty, rerender once
-      graph.clear();
       MapSingleton.dirty = true; // ->Renderer
     }
   }
@@ -252,52 +254,58 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
     };
   }
 
-  componentDeclaration(
-    ctx: any,
-    pipelineParentY: number | undefined = undefined
-  ) {
-    if (ctx.coordinates) {
-      const coordinates = this.visit(ctx.coordinates[0]);
+  componentDeclaration(ctx: any, parentComponent?: any) {
+    let children = undefined; // No pipeline
+    if (ctx.pipeline) {
+      children = this.visit(ctx.pipeline, ctx);
 
-      // wardleyscript has coordinates backwards
-      const rendererCoords = MapSingleton.wardleyToRendererCoords(
-        coordinates[1],
-        pipelineParentY ? pipelineParentY : coordinates[0]
-      ); // <-Renderer
-
-      if (ctx.pipeline && ctx.pipeline[0].children?.statement?.length > 0) {
-        ctx.pipeline[0].children!.statement.forEach((s: any) => {
-          if (s.children && s.children.componentDeclaration?.length > 0) {
-            this.visit(
-              s.children.componentDeclaration[0],
-              coordinates[0] - 1.7
-            );
-          }
-        });
+      // prevent nested pipelines for now, but still display as pipeline without children
+      if (children && parentComponent) {
+        children = [];
       }
-
-      addComponent(
-        rendererCoords[0],
-        rendererCoords[1],
-        ctx.Identifier[0].image,
-        ctx.pipeline ? "pipeline" : "normal",
-        undefined,
-        pipelineParentY ? 26 : undefined
-      );
-    } else {
-      addComponent(
-        40,
-        pipelineParentY ? pipelineParentY : 40,
-        ctx.Identifier[0].image,
-        ctx.pipeline ? "pipeline" : "normal",
-        undefined,
-        pipelineParentY ? 26 : undefined
-      );
     }
+
+    let coordinates = [10, 10];
+    if (ctx.coordinates) {
+      coordinates = this.visit(ctx.coordinates);
+    }
+
+    let parentCoordinates = undefined;
+    if (parentComponent && parentComponent.coordinates) {
+      parentCoordinates = this.visit(parentComponent.coordinates);
+    } else if (parentComponent) {
+      parentCoordinates = [10, 10];
+    }
+    // wardleyscript has coordinates backwards
+    const rendererCoords = MapSingleton.wardleyToRendererCoords(
+      coordinates[1],
+      parentCoordinates ? parentCoordinates[0] : coordinates[0] // if we're a child of a pipeline we want to use parent's y
+    ); // <-Renderer
+
+    addComponent({
+      x: rendererCoords[0],
+      y: rendererCoords[1],
+      name: ctx.Identifier[0].image,
+      type: "normal",
+      parent: parentComponent ?? undefined,
+      labelY: parentComponent ? 26 : undefined,
+      children,
+    });
   }
 
-  pipeline(ctx: any) {
-    return;
+  pipeline(ctx: any, parentComponent?: Object | undefined) {
+    let components: any[] = [];
+
+    if (ctx.statement) {
+      ctx.statement.forEach((statement: any) => {
+        // Only visit componentDeclarations for now
+        if (statement?.children?.componentDeclaration) {
+          this.visit(statement.children.componentDeclaration, parentComponent);
+          components.push(statement.children.componentDeclaration[0]);
+        }
+      });
+    }
+    return components;
   }
 
   coordinates(ctx: any) {
