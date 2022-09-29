@@ -503,7 +503,9 @@ export const matchComponentRegex = (componentName: string) => {
       "ParenClose"
     )})?`,
     `(${C("Whitespace")})?`,
-    `(${C("BraceOpen")})?`,
+    `(${C("BraceOpen")}[^${C("BraceClose")}]*$|${C("BraceOpen")}.*?${C(
+      "BraceClose"
+    )})?`,
     `(${C("Whitespace")})?`,
     `(${C("Comment")})?$`,
   ].join("");
