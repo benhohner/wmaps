@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --topMenuHeight: 48px;
 }
@@ -37,7 +41,7 @@ input {
 }
 
 #editorContainer {
-  width: 40vw;
+  width: 30vw;
   display: flex;
   flex-direction: column;
 }
@@ -49,7 +53,7 @@ input {
 }
 
 #map {
-  width: 60vw;
+  width: 70vw;
   line-height: 0;
   flex: 1 1;
 }
