@@ -63,7 +63,7 @@ export const userColor =
   userColors[Math.floor(Math.random() * userColors.length)];
 
 const yDoc = new Y.Doc();
-const yText = yDoc.getText();
+const yText = yDoc.getText("maptogether");
 
 export const multiplayerClientID = yDoc.clientID;
 
