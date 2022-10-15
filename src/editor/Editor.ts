@@ -3,7 +3,7 @@ import * as Y from "yjs";
 import { yCollab } from "y-codemirror.next";
 import { WebrtcProvider } from "y-webrtc";
 
-import { EditorState } from "@codemirror/state";
+import { ChangeSpec, EditorState } from "@codemirror/state";
 import { basicSetup, EditorView } from "codemirror";
 import { keymap } from "@codemirror/view";
 import { RegExpCursor } from "@codemirror/search";
@@ -15,10 +15,18 @@ import { vscodeKeymap } from "@replit/codemirror-vscode-keymap";
 import debounce from "lodash/debounce";
 import { matchComponentRegex, matchEdgeRegex } from "../parser/TogetherParser";
 
-import { setEditorText } from "../state/State";
+import {
+  removeFromSelection,
+  addToSelection,
+  setEditorText,
+  state,
+  subscribe,
+  clearSelection,
+} from "../state/State";
 import MapSingleton from "../map/components/MapSingleton";
 import { togetherScriptLinter } from "./TogetherScriptLinter";
 import { generateRandomAnimal } from "../user/utilities/generateRandomAnimal";
+import { rerenderGraph } from "../state/Graph";
 
 const Theme = EditorView.theme({
   "&": {
@@ -187,12 +195,12 @@ export const replaceCoordinates = (
 
   editorView.dispatch({
     changes,
-    selection: { anchor: changes[changes.length - 1].to },
+    // selection: { anchor: changes[changes.length - 1].from + changes[changes.length -1].insert.length },
   });
 };
 
 export const renameComponent = (oldName: string, newName: string) => {
-  let changes = [];
+  let changes: ChangeSpec[] = [];
 
   const componentSearchCursor = new RegExpCursor(
     editorView.state.doc,
@@ -230,15 +238,29 @@ export const renameComponent = (oldName: string, newName: string) => {
 
     // LHS Match
     if (next.match[2]) {
-      from += next.match[1] ? next.match[1].length : 0;
-      to = from + next.match[2].length;
+      const lhsWs = next.match[1] ? next.match[1].length : 0;
+      const lhsComponentIdentifier = next.match[2].length;
+      // const lhsWs2 = next.match[3] ? next.match[3].length : 0
+      // const lhsRest = next.match[4].length
+
+      from += lhsWs;
+      to = from + lhsComponentIdentifier;
 
       //RHS Match
-    } else if (next.match[6]) {
-      from += next.match[3].length + (next.match[5] ? next.match[5].length : 0);
-      to = from + next.match[6].length;
+    } else if (next.match[9]) {
+      const rhsRest = next.match[5].length;
+      const rhsDotAttributes = next.match[6].length;
+      const rhsWs = next.match[8] ? next.match[8].length : 0;
+      const rhsComponentIdentifier = next.match[9].length;
+      // const rhsWs2 = next.match[10] ? next.match[10].length : 0
+      // const rhsComment = next.match[11] ? next.match[11].length : 0
+
+      from += rhsRest + rhsDotAttributes + rhsWs;
+      to = from + rhsComponentIdentifier;
     } else {
-      return;
+      throw new Error(
+        "Error: this shouldn't be reached. Check if regex has changed."
+      );
     }
 
     changes.push({
@@ -254,6 +276,60 @@ export const renameComponent = (oldName: string, newName: string) => {
     );
   }
 
+  // update the selection if there is one
+  if (removeFromSelection(oldName)) {
+    addToSelection([newName]);
+  }
+
+  editorView.dispatch({
+    changes,
+  });
+};
+
+export const deleteComponents = (names: string[]) => {
+  if (names.length === 0) return;
+
+  let changes: ChangeSpec[] = [];
+
+  names.forEach((name: string) => {
+    const componentSearchCursor = new RegExpCursor(
+      editorView.state.doc,
+      matchComponentRegex(name),
+      {}
+    );
+
+    for (const next of componentSearchCursor) {
+      changes.push({
+        from: next.from,
+        to: next.to,
+        insert: "",
+      });
+    }
+
+    const edgeSearchCursor = new RegExpCursor(
+      editorView.state.doc,
+      matchEdgeRegex(name),
+      {}
+    );
+
+    for (const next of edgeSearchCursor) {
+      // NOTE: may need to revise regex to match full line of edge.
+      changes.push({
+        from: next.from,
+        to: next.to,
+        insert: "",
+      });
+    }
+  });
+
+  if (changes.length === 0) {
+    throw new Error(
+      `RenameComponentError: "${names}" not found in text document. State sync lost or regex error.`
+    );
+  }
+
+  clearSelection();
+
   editorView.dispatch({
     changes,
   });
@@ -268,3 +344,29 @@ window.addEventListener("beforeunload", function (e) {
 const handleEditorChange = debounce((text: string) => {
   setEditorText(text);
 }, 32);
+
+// SUBSCRIPTIONS
+subscribe(state.editor, () => {
+  // TODO: read lazy update checking to see if text makes a different graph than before
+  // Rerendering each time might be faster than diffing graph?
+
+  //   if (state.ast.astArr.length !== state.lastAst.astArr.length) {
+  //     state.lastAst.astArr = state.ast.astArr;
+  //     rerenderGraph();
+  //     return;
+  //   }
+
+  //   for (let i = 0; i < state.ast.astArr.length; i++) {
+  //     if (state.ast.astArr[i].type !== state.lastAst.astArr[i].type) {
+  //       state.lastAst.astArr = state.ast.astArr;
+  //       rerenderGraph();
+  //       return;
+  //     } else if (!isEqual(state.ast.astArr[i], state.lastAst.astArr[i])) {
+  //       state.lastAst.astArr = state.ast.astArr;
+  //       rerenderGraph();
+  //       return;
+  //     }
+  //   }
+
+  rerenderGraph();
+}); // <-State

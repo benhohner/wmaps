@@ -1,11 +1,28 @@
+import throttle from "lodash/throttle";
 import { Application, Container, BitmapFont, Point } from "pixi.js";
-
 import { appendText, renameComponent } from "../../editor/Editor";
 
-import { graph } from "../../state/Graph";
+import { graph, rerenderGraph } from "../../state/Graph";
 import { FloatingTextInput, OnSubmitHandler } from "./FloatingTextInput";
 
 import { RenderIndicator } from "../utilities/RenderIndicator";
+import {
+  clearSelection,
+  replaceSelection,
+  startPotentialSelect,
+  startSelecting,
+  state,
+  stopSelecting,
+  updateSelectionPoint,
+  xorSelection,
+  addUpdateSelectionPoint,
+  startPotentialTranslation,
+  stopTranslation,
+  startTranslation,
+  updateTranslationPoint,
+} from "../../state/State";
+
+import { SelectionHandler } from "./SelectionHandler";
 
 // @ts-ignore
 Application.prototype.render = null; // Disable auto-rendering by removing the function
@@ -73,6 +90,7 @@ class MapSingleton extends Application {
     // A container to hold all components, lines, text
     this.stage.addChild(this.graphContainer);
     this.graphContainer.sortableChildren = true; // make zIndex work
+    this.stage.addChild(SelectionHandler());
 
     // FPS Monitor
     // this.stage.addChild(new FPSMonitor());
@@ -90,61 +108,142 @@ class MapSingleton extends Application {
       //     )
       // );
 
-      const element = this.renderer.plugins.interaction.hitTest(
-        new Point(e.offsetX, e.offsetY)
-      );
+      const cursorPosition = new Point(e.offsetX, e.offsetY);
 
-      if (e.detail % 1 === 0 && !element) {
-        const mouseX = e.offsetX;
-        const mouseY = e.offsetY;
+      const element = this.renderer.plugins.interaction.hitTest(cursorPosition);
 
-        const handleInputSubmit: OnSubmitHandler = (e) => {
-          const target = e.target as HTMLInputElement;
-          if (!graph.hasNode(target.value)) {
-            // <-Graph
-            const coords = this.rendererToWardleyCoords(mouseX, mouseY);
-            // TODO: This string should come from Parser
-            appendText(`\n${target.value} [${coords[1]},${coords[0]}]`); // ->Editor
-          } else {
-            console.error(
-              "ComponentRenameError: the new name for the component already exists in the map."
-            );
+      if (e.detail % 1 === 0) {
+        /* canvas */
+        if (!element) {
+          if (!e.shiftKey) {
+            clearSelection();
           }
-        };
 
-        FloatingTextInput(
-          MapSingleton._parentElement,
-          mouseX,
-          mouseY,
-          handleInputSubmit
-        ); // ->UI
-      } else if (e.detail % 2 === 0 && element) {
-        const oldKey = element.nodeKey;
+          startPotentialSelect(cursorPosition);
+          this.view.addEventListener("mousemove", this.handleSelectDrag, false);
+          /* component */
+        } else if (element.nodeKey) {
+          if (!e.shiftKey) {
+            if (!state.selection.selectionItems.has(element.nodeKey)) {
+              replaceSelection([element.nodeKey]);
+            }
+            // start potential drag
+            startPotentialTranslation(cursorPosition);
+            this.view.addEventListener(
+              "mousemove",
+              this.handleSelectionTranslate,
+              false
+            );
+          } else {
+            xorSelection([element.nodeKey]);
+          }
+        }
+      }
 
-        // Make sure we're clicking on a Component
-        if (oldKey) {
+      if (e.detail % 2 === 0) {
+        if (!element) {
           const mouseX = e.offsetX;
           const mouseY = e.offsetY;
-
           const handleInputSubmit: OnSubmitHandler = (e) => {
             const target = e.target as HTMLInputElement;
             if (!graph.hasNode(target.value)) {
               // <-Graph
-              renameComponent(oldKey, target.value); // ->Editor
+              const coords = this.rendererToWardleyCoords(mouseX, mouseY);
+              // TODO: This string should come from Parser
+              appendText(`\n${target.value} [${coords[1]},${coords[0]}]`); // ->Editor
+            } else {
+              console.error(
+                "ComponentRenameError: the new name for the component already exists in the map."
+              );
+            }
+          };
+          FloatingTextInput(
+            MapSingleton._parentElement,
+            mouseX,
+            mouseY,
+            handleInputSubmit
+          ); // ->UI
+        } else if (element && element.nodeKey) {
+          const handleInputSubmit: OnSubmitHandler = (e) => {
+            const target = e.target as HTMLInputElement;
+            if (!graph.hasNode(target.value)) {
+              // <-Graph
+              renameComponent(element.nodeKey, target.value); // ->Editor
             }
           };
 
           FloatingTextInput(
             MapSingleton._parentElement as HTMLDivElement,
-            mouseX,
-            mouseY,
+            cursorPosition.x,
+            cursorPosition.y,
             handleInputSubmit,
-            oldKey
+            element.nodeKey
           ); // ->UI
         }
       }
     });
   }
+
+  handleSelectionTranslate = (e: MouseEvent) => {
+    let currentPosition = new Point(e.offsetX, e.offsetY);
+    if (state.translateDrag.translationStartPoint) {
+      if (
+        !state.translateDrag.translationCurrentPoint &&
+        Math.abs(
+          currentPosition.x - state.translateDrag.translationStartPoint.x
+        ) +
+          Math.abs(
+            currentPosition.y - state.translateDrag.translationStartPoint.y
+          ) >=
+          3
+      ) {
+        startTranslation(currentPosition);
+      } else if (state.translateDrag.isTranslating) {
+        updateTranslationPoint(currentPosition);
+      }
+    }
+  };
+
+  handleSelectDrag = (e: MouseEvent) => {
+    let currentPosition = new Point(e.offsetX, e.offsetY);
+    if (state.selectDrag.selectionStartPoint) {
+      if (
+        !state.selectDrag.selectionCurrentPoint &&
+        Math.abs(currentPosition.x - state.selectDrag.selectionStartPoint.x) +
+          Math.abs(
+            currentPosition.y - state.selectDrag.selectionStartPoint.y
+          ) >=
+          3
+      ) {
+        startSelecting(currentPosition);
+      } else if (state.selectDrag.selectionCurrentPoint) {
+        if (e.shiftKey) {
+          addUpdateSelectionPoint(currentPosition);
+        } else {
+          updateSelectionPoint(currentPosition);
+        }
+      }
+    }
+  };
+
+  // using window because we want to be able to stop clicking even outside of the canvas.
+  handleMouseUp = (e: MouseEvent) => {
+    stopSelecting();
+    stopTranslation();
+    this.view.removeEventListener("mousemove", this.handleSelectDrag, false);
+    this.view.removeEventListener(
+      "mousemove",
+      this.handleSelectionTranslate,
+      false
+    );
+  };
+
+  // Resize container on window resize
+  // (manually place throughout app because ResizerObserver makes flashes)
+  handleResize = throttle(() => {
+    this.resize();
+    rerenderGraph();
+  }, 32);
 
   wardleyToRendererCoords(x: number, y: number) {
     return [

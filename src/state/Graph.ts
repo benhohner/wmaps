@@ -5,7 +5,7 @@ import { Component } from "../map/components/Component";
 import { Line } from "../map/components/Line";
 import { ComponentT, LineT } from "../map/components/types";
 
-import { state, subscribe, setLineTargetA } from "./State";
+import { state, setInitialLinkTarget } from "./State";
 import { BaseTogetherVisitor, parseToCST } from "../parser/TogetherParser";
 import { disableErrorMode, enableErrorMode } from "../editor/Editor";
 
@@ -92,6 +92,22 @@ export const updateComponentPosition = (
     node.component.position.y = y; // ->Renderer
     node.coordinates.x = x;
     node.coordinates.y = y;
+    MapSingleton.dirty = true; // ->Renderer
+    graph.forEachEdge(nodeKey, updateEdgePosition);
+  }
+};
+
+export const updateComponentPositionOffset = (
+  nodeKey: string,
+  x: number,
+  y: number
+) => {
+  const node = graph.getNodeAttributes(nodeKey);
+  if (node) {
+    node.component.position.x += x; // ->Renderer
+    node.component.position.y += y; // ->Renderer
+    node.coordinates.x += x;
+    node.coordinates.y += y;
     MapSingleton.dirty = true; // ->Renderer
     graph.forEachEdge(nodeKey, updateEdgePosition);
   }
@@ -197,7 +213,7 @@ export class TogetherVisitorToGraph extends BaseTogetherVisitor {
   /* Visit methods */
   default(ctx: any) {
     // Don't keep reference to deleted item
-    setLineTargetA(undefined); // <-State
+    setInitialLinkTarget(undefined); // <-State
     graph.clear();
 
     if (ctx.statement) {
@@ -342,32 +358,6 @@ export const rerenderGraph = () => {
     wasRerenderError = false;
   }
 };
-
-// SUBSCRIPTIONS
-subscribe(state.editor, () => {
-  // TODO: read lazy update checking to see if text makes a different graph than before
-  // Rerendering each time might be faster than diffing graph?
-
-  //   if (state.ast.astArr.length !== state.lastAst.astArr.length) {
-  //     state.lastAst.astArr = state.ast.astArr;
-  //     rerenderGraph();
-  //     return;
-  //   }
-
-  //   for (let i = 0; i < state.ast.astArr.length; i++) {
-  //     if (state.ast.astArr[i].type !== state.lastAst.astArr[i].type) {
-  //       state.lastAst.astArr = state.ast.astArr;
-  //       rerenderGraph();
-  //       return;
-  //     } else if (!isEqual(state.ast.astArr[i], state.lastAst.astArr[i])) {
-  //       state.lastAst.astArr = state.ast.astArr;
-  //       rerenderGraph();
-  //       return;
-  //     }
-  //   }
-
-  rerenderGraph();
-}); // <-State
 
 graph.on("cleared", function () {
   MapSingleton.graphContainer.removeChildren(); // ->Renderer

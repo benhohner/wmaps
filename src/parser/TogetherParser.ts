@@ -511,11 +511,15 @@ export const matchComponentRegex = (componentName: string) => {
   ].join("");
 };
 
-export const matchEdgeRegex = (edgeComponentName: string) =>
-  `^(${C("Whitespace")})?(${escapeRegex(edgeComponentName)})(?:${C(
-    "Whitespace"
-  )})?\\.|(\\.(${C("ParenOpen")}.*?${C("ParenClose")})?|\\))(${C(
-    "Whitespace"
-  )})?(${escapeRegex(edgeComponentName)})(?:${C("Whitespace")})?(?:${C(
-    "Comment"
-  )})?$`;
+export const matchEdgeRegex = (edgeComponentName: string) => {
+  return [
+    `^(${C("Whitespace")})?(${escapeRegex(edgeComponentName)})(${C(
+      "Whitespace"
+    )})?\\.(.*)$`,
+    `|(.*?)(\\.(${C("ParenOpen")}.*?${C("ParenClose")})?|\\))(${C(
+      "Whitespace"
+    )})?(${escapeRegex(edgeComponentName)})(${C("Whitespace")})?(${C(
+      "Comment"
+    )})?$`,
+  ].join("");
+};
