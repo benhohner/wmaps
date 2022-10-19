@@ -7,6 +7,7 @@ import { ProjectMenu } from "../menu";
 
 import { setEditorText } from "../state/State";
 
+import { initializeHistoryMonkeypatch } from "./utilities/historyMonkeypatch";
 import { initializePanelResizer } from "./components/PanelResizer";
 import { initializeUserEvents } from "./UserEvents";
 
@@ -27,6 +28,8 @@ import "./index.css";
  * 3. Editor
  * 4. App
  */
+
+initializeHistoryMonkeypatch();
 
 initializeUserEvents();
 

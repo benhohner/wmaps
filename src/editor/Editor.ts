@@ -27,6 +27,13 @@ import MapSingleton from "../map/components/MapSingleton";
 import { togetherScriptLinter } from "./TogetherScriptLinter";
 import { generateRandomAnimal } from "../user/utilities/generateRandomAnimal";
 import { rerenderGraph } from "../state/Graph";
+import { nanoid } from "../app/utilities/nanoid";
+
+let room = document.location.pathname.replace("/", "");
+if (!room) {
+  room = nanoid(8);
+  history.replaceState({}, "", room);
+}
 
 const Theme = EditorView.theme({
   "&": {
@@ -78,7 +85,7 @@ export const multiplayerClientID = yDoc.clientID;
 export const undoManager = new Y.UndoManager(yText, { captureTimeout: 350 });
 
 // @ts-ignore because Typing error in WebrtcProvider
-const provider = new WebrtcProvider("wardley", yDoc, {
+const provider = new WebrtcProvider(`MapTogether${room}`, yDoc, {
   password: "isnh388u3unhuie",
   signaling: [
     "wss://signaling.yjs.dev",
