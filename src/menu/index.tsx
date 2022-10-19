@@ -14,10 +14,19 @@ function classNames(...classes: any) {
 }
 
 export const ProjectMenu = () => {
-  let [isOpen, setIsOpen] = useState(true);
+  let [isOpen, setIsOpen] = useState(() => {
+    const state = localStorage.getItem("shouldShowHelp");
+    console.log(!state || state === "true");
+    return !state || state === "true";
+  });
 
   const handleOnClick = () => {
     setIsOpen(true);
+  };
+
+  const handleClose = () => {
+    localStorage.setItem("shouldShowHelp", "false");
+    setIsOpen(false);
   };
 
   return (
@@ -141,7 +150,7 @@ export const ProjectMenu = () => {
             <Dialog
               as="div"
               className="relative z-10"
-              onClose={() => setIsOpen(false)}
+              onClose={() => handleClose()}
             >
               <Transition.Child
                 as={Fragment}
@@ -228,7 +237,7 @@ export const ProjectMenu = () => {
                         <button
                           type="button"
                           className="inline-flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm"
-                          onClick={() => setIsOpen(false)}
+                          onClick={() => handleClose()}
                         >
                           Get Started
                         </button>
