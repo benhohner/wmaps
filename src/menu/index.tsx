@@ -118,6 +118,14 @@ export const ProjectMenu = () => {
                           </a>
                         )}
                       </Menu.Item>
+                      <Menu.Item>
+                        <a
+                          href="#"
+                          className="block px-4 py-2 text-sm text-gray-400 cursor-default	"
+                        >
+                          {`v${window.__APP_VERSION__}`}
+                        </a>
+                      </Menu.Item>
                     </Menu.Items>
                   </Transition>
                 </Menu>

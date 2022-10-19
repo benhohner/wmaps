@@ -36,5 +36,8 @@ export default defineConfig(({ mode }) => {
 
   return mergeConfig(testConfig, {
     plugins: [htmlEnvVariables(), react()],
+    define: {
+      __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+    },
   });
 });
