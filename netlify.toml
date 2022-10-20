@@ -1,3 +1,6 @@
+[[plugins]]
+  package = "/.netlify/plugins/env"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
