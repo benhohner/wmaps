@@ -1,3 +1,3 @@
 export const onPreBuild = function ({ netlifyConfig, packageJson }) {
-  netlifyConfig.build.environment.NPM_PACKAGE_VERSION = packageJson.version;
+  netlifyConfig.build.environment.npm_package_version = packageJson.version;
 };
