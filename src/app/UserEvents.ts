@@ -11,7 +11,7 @@ var combokeys = new Combokeys(document.documentElement);
 // Allow hotkeys when focused on inputs
 combokeys.stopCallback = () => false;
 
-const ctrlCmd = isApple ? "command" : "control";
+const ctrlCmd = isApple ? "command" : "ctrl";
 
 const resetInteractiveStates = () => {
   setIsLinkModeEnabled(false);
