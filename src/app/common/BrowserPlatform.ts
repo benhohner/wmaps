@@ -27,7 +27,7 @@ function getPlatform() {
 export const platform = getPlatform().toLowerCase();
 
 export const isOSX = /mac/.test(platform); // Mac desktop
-export const isIOS = ["iphone", "ipad", "ipod"].indexOf(platform); // Mac iOs
+export const isIOS = ["iphone", "ipad", "ipod"].includes(platform); // Mac iOs
 export const isApple = isOSX || isIOS; // Apple device (desktop or iOS)
 export const isWindows = /win/.test(platform); // Windows
 export const isAndroid = /android/.test(platform); // Android
