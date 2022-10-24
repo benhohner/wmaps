@@ -144,6 +144,7 @@ class MapSingleton extends Application {
         if (!element) {
           const mouseX = e.offsetX;
           const mouseY = e.offsetY;
+
           const handleInputSubmit: OnSubmitHandler = (e) => {
             const target = e.target as HTMLInputElement;
             if (!graph.hasNode(target.value)) {
@@ -157,6 +158,7 @@ class MapSingleton extends Application {
               );
             }
           };
+
           FloatingTextInput(
             MapSingleton._parentElement,
             mouseX,

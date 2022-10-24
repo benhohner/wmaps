@@ -5,13 +5,38 @@ import {
   BellIcon,
   XMarkIcon,
   QuestionMarkCircleIcon,
+  LinkIcon,
 } from "@heroicons/react/24/outline";
+
+import { copyTextToClipboard } from "../app/utilities/Clipboard";
 
 const navigation = [{ name: "Map", href: "#", current: true }];
 
 function classNames(...classes: any) {
   return classes.filter(Boolean).join(" ");
 }
+
+const ShareButton = () => {
+  let [isClicked, setIsClicked] = useState(false);
+  const handleClick = () => {
+    copyTextToClipboard(document.location.href);
+    setIsClicked(true);
+    setTimeout(() => setIsClicked(false), 1000); // 👈️ change text back after 1 second
+  };
+  return (
+    <button
+      type="button"
+      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+      onClick={() => handleClick()}
+    >
+      <LinkIcon
+        className="-ml-1 mr-2 h-5 w-5 text-gray-500"
+        aria-hidden="true"
+      />
+      {isClicked ? "Copied!" : "Share"}
+    </button>
+  );
+};
 
 export const ProjectMenu = () => {
   let [isOpen, setIsOpen] = useState(() => {
@@ -35,8 +60,8 @@ export const ProjectMenu = () => {
         <>
           <div className="mx-auto px-0 sm:px-4">
             <div className="relative flex h-12 items-center justify-between">
+              {/* Mobile menu button*/}
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-                {/* Mobile menu button*/}
                 <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                   <span className="sr-only">Open main menu</span>
                   {open ? (
@@ -46,7 +71,10 @@ export const ProjectMenu = () => {
                   )}
                 </Disclosure.Button>
               </div>
+
+              {/* Left Menu */}
               <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                {/* logo */}
                 <div className="flex flex-shrink-0 items-center">
                   <span className="block h-8 w-auto text-3xl leading-none select-none align-bottom">
                     🤗
@@ -62,6 +90,7 @@ export const ProjectMenu = () => {
                     alt="Your Company"
                   /> */}
                 </div>
+                {/* navigation desktop */}
                 <div className="hidden sm:ml-6 sm:block">
                   <div className="flex space-x-4">
                     {navigation.map((item) => (
@@ -82,8 +111,12 @@ export const ProjectMenu = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Right Menu */}
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
                 {/* Profile dropdown */}
+                <ShareButton />
+
                 <Menu as="div" className="relative ml-3">
                   <div>
                     <Menu.Button className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
@@ -133,6 +166,7 @@ export const ProjectMenu = () => {
             </div>
           </div>
 
+          {/* navigation mobile */}
           <Disclosure.Panel className="sm:hidden z-50">
             <div className="space-y-1 px-2 pt-2 pb-3">
               {navigation.map((item) => (
@@ -154,6 +188,7 @@ export const ProjectMenu = () => {
             </div>
           </Disclosure.Panel>
 
+          {/* Help Dialog Box */}
           <Transition.Root show={isOpen} as={Fragment}>
             <Dialog
               as="div"
