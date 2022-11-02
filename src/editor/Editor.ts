@@ -27,7 +27,7 @@ import MapSingleton from "../map/components/MapSingleton";
 import { togetherScriptLinter } from "./TogetherScriptLinter";
 import { generateRandomAnimal } from "../user/utilities/generateRandomAnimal";
 import { rerenderGraph } from "../state/Graph";
-import { nanoid } from "../app/utilities/NanoId";
+import { nanoid } from "../app/NanoId";
 
 let room = document.location.pathname.replace("/", "");
 if (!room) {
