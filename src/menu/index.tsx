@@ -41,7 +41,7 @@ const ShareButton = () => {
 export const ProjectMenu = () => {
   let [isOpen, setIsOpen] = useState(() => {
     const state = localStorage.getItem("shouldShowHelp");
-    console.log(!state || state === "true");
+
     return !state || state === "true";
   });
 
