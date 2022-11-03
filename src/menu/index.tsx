@@ -8,7 +8,7 @@ import {
   LinkIcon,
 } from "@heroicons/react/24/outline";
 
-import { copyTextToClipboard } from "../app/Clipboard";
+import { copyTextToClipboard } from "../app/utilities/Clipboard";
 
 const navigation = [{ name: "Map", href: "#", current: true }];
 

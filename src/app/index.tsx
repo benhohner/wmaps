@@ -7,7 +7,7 @@ import { ProjectMenu } from "../menu";
 
 import { setEditorText } from "../state/State";
 
-import { initializeHistoryMonkeypatch } from "./HistoryMonkeypatch";
+import { initializeHistoryMonkeypatch } from "./utilities/HistoryMonkeypatch";
 import { initializePanelResizer } from "./components/PanelResizer";
 import { initializeUserEvents } from "./UserEvents";
 
