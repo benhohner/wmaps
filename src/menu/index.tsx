@@ -231,40 +231,45 @@ export const ProjectMenu = () => {
                             <div className="mt-2">
                               <p className="text-lg pb-2">
                                 MapTogether is a multiplayer visual Wardley
-                                Mapping tool. Here are some tips to get started:
+                                Mapping tool. If you already know Wardley Mapping,
+                                here are some tips to get started:
                               </p>
                               <ul className="list-disc list-inside">
                                 <li>
                                   The left side of the screen is the canvas. The
                                   right side is the code editor. Unlike many
-                                  Wardley Mapping tools you shouldn't need to
+                                  Wardley Mapping tools, you shouldn't need to
                                   edit code much.
                                 </li>
                                 <li>
-                                  Double click on the canvas to add a component
+                                  Adding components: Double click on the canvas,
+                                  type a component name, then press enter
                                 </li>
-                                <li>Double click a component to rename it</li>
+                                <li>Renaming components: double click a component</li>
                                 <li>
-                                  Hold Ctrl/Cmd and click two components to link
-                                  them as dependencies
-                                </li>
-                                <li>
-                                  Click and drag on the canvas to select
-                                  components
-                                </li>
-                                <li>Click and drag components to move them</li>
-                                <li>
-                                  Hold shift and drag to add to the selection,
-                                  or click a component to toggle the selection
+                                  Linking components: Hold Ctrl/Cmd and click the
+                                  first component, then the second component
                                 </li>
                                 <li>
-                                  Press del/backspace to delete selected
-                                  components
+                                  Selecting components: Click and drag on the canvas
                                 </li>
                                 <li>
-                                  Pipelines currently only work by adding
-                                  {" { }"} at the end of a component in the code
-                                  editor and moving components inside.
+                                  Moving components: Click and hold on a component
+                                  and drag it
+                                </li>
+                                <li>
+                                  Toggling component selection: Hold shift and drag
+                                  or click to add to the selection. Click outside
+                                  the selected components to deselect
+                                </li>
+                                <li>
+                                  Deleting components: Press del/backspace
+                                </li>
+                                <li>
+                                  Pipelines:
+                                  currently pipelines only work by nesting
+                                  other components in braces {" { }"} at the end
+                                  of a component in the code editor.
                                 </li>
                                 <li>
                                   There will be bugs. If you find any please
